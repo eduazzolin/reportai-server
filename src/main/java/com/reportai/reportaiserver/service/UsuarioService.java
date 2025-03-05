@@ -2,6 +2,7 @@ package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.UsuarioRepository;
+import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +13,12 @@ public class UsuarioService {
 
    @Autowired
    private UsuarioRepository repository;
-   
-    public Usuario save(Usuario usuario) {
+
+   @Autowired
+   private Validacoes validacoes;
+
+   public Usuario save(Usuario usuario) {
+      validacoes.validarUsuario(usuario);
       return repository.save(usuario);
    }
 

@@ -20,12 +20,8 @@ public class UsuarioController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
-      try {
-         Usuario usuarioSalvo = service.save(usuario);
-         return ResponseEntity.ok(usuarioSalvo);
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      Usuario usuarioSalvo = service.save(usuario);
+      return ResponseEntity.ok(usuarioSalvo);
    }
 
 
