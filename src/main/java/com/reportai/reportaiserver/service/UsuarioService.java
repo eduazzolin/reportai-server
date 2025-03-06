@@ -19,6 +19,7 @@ public class UsuarioService {
 
    public Usuario save(Usuario usuario) {
       validacoes.validarUsuario(usuario);
+      usuario.setRole("USER");
       return repository.save(usuario);
    }
 
