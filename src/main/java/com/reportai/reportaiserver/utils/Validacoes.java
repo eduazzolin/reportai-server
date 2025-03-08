@@ -73,7 +73,7 @@ public class Validacoes {
       if (!usuario.getEmail().matches("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")) {
          throw new CustomException(ErrorDictionary.EMAIL_INVALIDO);
       }
-      if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+      if (usuario.getId() == null && usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
          throw new CustomException(ErrorDictionary.EMAIL_JA_EXISTE);
       }
 
@@ -84,7 +84,7 @@ public class Validacoes {
       if (!validarCPF(usuario.getCpf())) {
          throw new CustomException(ErrorDictionary.CPF_INVALIDO);
       }
-      if (usuarioRepository.findByCpf(usuario.getCpf()).isPresent()) {
+      if (usuario.getId() == null && usuarioRepository.findByCpf(usuario.getCpf()).isPresent()) {
          throw new CustomException(ErrorDictionary.CPF_JA_EXISTE);
       }
 

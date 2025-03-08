@@ -1,6 +1,8 @@
 package com.reportai.reportaiserver.service;
 
+import com.reportai.reportaiserver.dto.UsuarioDTO;
 import com.reportai.reportaiserver.exception.CustomException;
+import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.UsuarioRepository;
 import com.reportai.reportaiserver.utils.UsuarioUtils;
@@ -24,6 +26,9 @@ public class UsuarioService {
    public Usuario save(Usuario usuario) {
       validacoes.validarUsuario(usuario);
       usuario.setRole("USER");
+      if (usuario.getId() != null) {
+         usuario.setCpf(repository.findById(usuario.getId()).get().getCpf());
+      }
       return repository.save(usuario);
    }
 
@@ -42,8 +47,9 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public Usuario findById(Long id) {
-      return repository.findById(id).orElse(null);
+   public UsuarioDTO findDTOById(Long id) {
+      Usuario usuario = repository.findById(id).get();
+      return UsuarioMapper.toDTO(usuario);
    }
 
    public List<Usuario> findAll() {
