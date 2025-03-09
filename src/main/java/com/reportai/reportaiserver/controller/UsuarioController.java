@@ -26,6 +26,13 @@ public class UsuarioController {
       return ResponseEntity.ok(usuarioSalvo);
    }
 
+   @DeleteMapping("/{id}")
+   public ResponseEntity<?> deletar(@PathVariable Long id) {
+      service.deleteById(id);
+      return ResponseEntity.ok().build();
+   }
+
+
    @PostMapping("/autenticar")
    public ResponseEntity<?> autenticar(@RequestBody Usuario usuario) {
       Usuario usuarioAutenticado = service.autenticar(usuario.getEmail(), usuario.getSenha());

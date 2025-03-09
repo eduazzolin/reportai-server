@@ -11,6 +11,7 @@ public enum ErrorDictionary {
    ,EMAIL_INVALIDO("ERRO-006", "E-mail inválido.")
    ,CPF_INVALIDO("ERRO-007", "CPF inválido.")
    ,SENHA_INVALIDA("ERRO-008", "Senha inválida.")
+   ,USUARIO_DELETADO("ERRO-009", "Usuário deletado.")
 ;
    private final String codigo;
    private final String descricao;
