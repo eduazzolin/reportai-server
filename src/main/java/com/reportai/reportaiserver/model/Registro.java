@@ -21,7 +21,7 @@ public class Registro {
 
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Integer id;
+   private Long id;
 
    @Column(nullable = false, length = 255)
    private String titulo;
@@ -61,10 +61,13 @@ public class Registro {
    @JoinColumn(name = "id_usuario", nullable = false)
    private Usuario usuario;
 
-@OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-@JsonManagedReference
-private List<Imagem> imagens;
+   @OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @JsonManagedReference
+   private List<Imagem> imagens;
 
+   @OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @JsonManagedReference
+   private List<Interacao> interacoes;
 
 
 }

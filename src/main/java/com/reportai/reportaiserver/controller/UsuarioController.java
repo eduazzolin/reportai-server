@@ -47,7 +47,7 @@ public class UsuarioController {
    }
 
    @GetMapping("/{id}")
-   public ResponseEntity<?> obterPorId(@PathVariable Long id) {
+   public ResponseEntity<?> buscarDTOPorId(@PathVariable Long id) {
       UsuarioDTO usuario = service.findDTOById(id);
       return ResponseEntity.ok(usuario);
    }

@@ -1,11 +1,19 @@
 package com.reportai.reportaiserver.service;
 
+import com.reportai.reportaiserver.dto.RegistroDTO;
+import com.reportai.reportaiserver.dto.UsuarioDTO;
+import com.reportai.reportaiserver.exception.CustomException;
+import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.mapper.RegistroMapper;
+import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Registro;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.RegistroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RegistroService {
@@ -18,8 +26,13 @@ public class RegistroService {
    }
 
    public Registro findById(Long id) {
-      return repository.findById(id).orElse(null);
+      Optional<Registro> registro = repository.findById(id);
+      if (registro.isEmpty()) {
+         throw new CustomException(ErrorDictionary.REGISTRO_NAO_ENCONTRADO);
+      }
+      return registro.get();
    }
+
 
    public List<Registro> findByDistancia(double latitude, double longitude, double distancia, int paginacao, int pagina) {
       return repository.findByDistance(latitude, longitude, distancia, paginacao, pagina);

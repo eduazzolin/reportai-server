@@ -1,5 +1,7 @@
 package com.reportai.reportaiserver.controller;
 
+import com.reportai.reportaiserver.dto.RegistroDTO;
+import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.service.InteracaoService;
@@ -50,12 +52,14 @@ public class RegistroController {
    }
 
    @GetMapping("/{id}")
-   public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
-      try {
-         return ResponseEntity.ok(service.findById(id));
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+   public RegistroDTO buscarDTOPorId(@PathVariable Long id) {
+      Registro registro = service.findById(id);
+      return RegistroMapper.toDTO(registro);
+   }
+
+   @GetMapping("/d/{id}")
+   public Registro buscarPorId(@PathVariable Long id) {
+      return service.findById(id);
    }
 
    @DeleteMapping("/{id}")

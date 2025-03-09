@@ -52,8 +52,11 @@ public class UsuarioService {
    }
 
    public UsuarioDTO findDTOById(Long id) {
-      Usuario usuario = repository.findById(id).get();
-      return UsuarioMapper.toDTO(usuario);
+      Optional<Usuario> usuario = repository.findById(id);
+      if (usuario.isEmpty()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+      return UsuarioMapper.toDTO(usuario.get());
    }
 
    public List<Usuario> findAll() {
