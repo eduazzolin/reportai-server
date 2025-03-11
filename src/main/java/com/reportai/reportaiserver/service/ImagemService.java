@@ -1,20 +1,42 @@
 package com.reportai.reportaiserver.service;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.reportai.reportaiserver.model.Imagem;
+import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.repository.ImagemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ImagemService {
 
    @Autowired
    private ImagemRepository repository;
-   
-   
-    public Imagem save(Imagem imagem) {
+
+   @Value("${gcs.bucket-name}")
+   private String bucketName;
+
+   @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
+   private String googleApplicationCredentials;
+
+   public Imagem save(MultipartFile file, Long idRegistro) throws IOException {
+
+      String url = uploadToGCS(file, idRegistro);
+      Imagem imagem = new Imagem();
+      imagem.setCaminho(url);
+      imagem.setRegistro(Registro.builder().id(idRegistro).build());
+
       return repository.save(imagem);
    }
 
@@ -29,4 +51,22 @@ public class ImagemService {
    public void deleteById(Long id) {
       repository.deleteById(id);
    }
+
+   public String uploadToGCS(MultipartFile file, Long idRegistro) throws IOException {
+      Storage storage = StorageOptions
+              .newBuilder()
+              .setCredentials(GoogleCredentials.fromStream(new FileInputStream(googleApplicationCredentials)))
+              .setProjectId("reportai-453222").build().getService();
+
+
+      String fileName = "r" + idRegistro + "_" + UUID.randomUUID().toString();
+      BlobId blobId = BlobId.of(bucketName, fileName);
+      BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+              .setContentType(file.getContentType())
+              .build();
+
+      storage.create(blobInfo, file.getBytes());
+      return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
+   }
+
 }

@@ -18,9 +18,6 @@ public class Imagem {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Integer id;
 
-   @Column(length = 255)
-   private String nome;
-
    @Lob
    @Column(length = 9999)
    private String caminho;
