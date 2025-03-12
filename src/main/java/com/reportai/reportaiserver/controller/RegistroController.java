@@ -24,12 +24,8 @@ public class RegistroController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
-      try {
-         Registro registroSalvo = service.save(registro);
-         return ResponseEntity.ok(registroSalvo);
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      Registro registroSalvo = service.save(registro);
+      return ResponseEntity.ok(registroSalvo);
    }
 
    @GetMapping
