@@ -1,10 +1,17 @@
 package com.reportai.reportaiserver.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -13,23 +20,30 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Interacao {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Integer id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoInteracao type;
+   @CreationTimestamp
+   @Column(updatable = false)
+   private LocalDateTime dtCriacao;
 
-    @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
+   @Enumerated(EnumType.STRING)
+   @Column(nullable = false)
+   private TipoInteracao tipo;
 
-    @ManyToOne
-    @JoinColumn(name = "id_registro", nullable = false)
-    private Registro registro;
+   @ManyToOne
+   @JoinColumn(name = "id_usuario", nullable = false)
+   @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+   @JsonIdentityReference(alwaysAsId = true)
+   private Usuario usuario;
 
-    public enum TipoInteracao {
-        CURTIDA, CONCLUIDO
-    }
+   @ManyToOne
+   @JoinColumn(name = "id_registro", nullable = false)
+   @JsonBackReference
+   private Registro registro;
+
+   public enum TipoInteracao {
+      RELEVANTE, CONCLUIDO
+   }
 }

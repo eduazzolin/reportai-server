@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/imagens")
@@ -15,15 +18,6 @@ public class ImagemController {
    @Autowired
    private ImagemService service;
 
-   @PostMapping
-   public ResponseEntity<?> salvar(@RequestBody Imagem imagem) {
-      try {
-         Imagem imagemSalvo = service.save(imagem);
-         return ResponseEntity.ok(imagemSalvo);
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
-   }
 
    @GetMapping
    public ResponseEntity<?> listar() {
@@ -53,5 +47,12 @@ public class ImagemController {
       }
    }
 
+   @PostMapping
+   public ResponseEntity<Imagem> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("idRegistro") Long idRegistro) throws IOException {
+
+      Imagem imagemSalva = service.save(file, idRegistro);
+      return ResponseEntity.ok(imagemSalva);
+
+   }
 
 }

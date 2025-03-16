@@ -1,7 +1,10 @@
 package com.reportai.reportaiserver.controller;
 
+import com.reportai.reportaiserver.dto.RegistroDTO;
+import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.InteracaoService;
 import com.reportai.reportaiserver.service.RegistroService;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +25,12 @@ public class RegistroController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
-      try {
-         Registro registroSalvo = service.save(registro);
-         return ResponseEntity.ok(registroSalvo);
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+      registro.setUsuario(usuario);
+      Registro registroSalvo = service.save(registro);
+      RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
+      return ResponseEntity.ok(registroDTO);
    }
 
    @GetMapping
@@ -50,12 +53,14 @@ public class RegistroController {
    }
 
    @GetMapping("/{id}")
-   public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
-      try {
-         return ResponseEntity.ok(service.findById(id));
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+   public RegistroDTO buscarDTOPorId(@PathVariable Long id) {
+      Registro registro = service.findById(id);
+      return RegistroMapper.toDTO(registro);
+   }
+
+   @GetMapping("/d/{id}")
+   public Registro buscarPorId(@PathVariable Long id) {
+      return service.findById(id);
    }
 
    @DeleteMapping("/{id}")

@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -18,9 +21,6 @@ public class Imagem {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Integer id;
 
-   @Column(length = 255)
-   private String nome;
-
    @Lob
    @Column(length = 9999)
    private String caminho;
@@ -29,4 +29,9 @@ public class Imagem {
    @JoinColumn(name = "id_registro", nullable = false)
    @JsonBackReference
    private Registro registro;
+
+
+   @CreationTimestamp
+   @Column(updatable = false)
+   private LocalDateTime dtCriacao;
 }
