@@ -33,11 +33,14 @@ public class RegistroMapper {
 
       Integer interacoesRelevante = 0;
       Integer interacoesConcluido = 0;
-      for (Interacao interacao : entity.getInteracoes()) {
-         if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE)) {
-            interacoesRelevante++;
-         } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
-            interacoesConcluido++;
+
+      if (entity.getInteracoes() != null) {
+         for (Interacao interacao : entity.getInteracoes()) {
+            if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE)) {
+               interacoesRelevante++;
+            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
+               interacoesConcluido++;
+            }
          }
       }
       dto.setInteracoesRelevante(interacoesRelevante);

@@ -4,6 +4,7 @@ import com.reportai.reportaiserver.dto.RegistroDTO;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.InteracaoService;
 import com.reportai.reportaiserver.service.RegistroService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,12 @@ public class RegistroController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+      registro.setUsuario(usuario);
       Registro registroSalvo = service.save(registro);
-      return ResponseEntity.ok(registroSalvo);
+      RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
+      return ResponseEntity.ok(registroDTO);
    }
 
    @GetMapping

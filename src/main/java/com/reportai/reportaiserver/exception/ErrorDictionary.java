@@ -12,7 +12,11 @@ public enum ErrorDictionary {
    ,SENHA_INVALIDA("ERRO-008", "Senha inválida.")
    ,USUARIO_DELETADO("ERRO-009", "Usuário deletado.")
    ,REGISTRO_NAO_ENCONTRADO("ERRO-010", "Registro não encontrado.")
-
+   ,CATEGORIA_NAO_ENCONTRADA("ERRO-011", "Categoria não encontrada.")
+   ,DISTANCIA_INVALIDA("ERRO-012", "Distância do centro de Florianópolis ultrapassa o permitido.")
+   ,FORMATO_INCORRETO("ERRO-013", "Formato de imagem incorreto. Utilize .jpeg ou .png.")
+   ,TAMANHO_MAXIMO("ERRO-014", "Tamanho máximo de imagem excedido. Limite de 5MB.")
+   ,USUARIO_SEM_PERMISSAO("ERRO-015", "Usuário sem permissão para realizar a operação.")
    ;
    private final String codigo;
    private final String descricao;

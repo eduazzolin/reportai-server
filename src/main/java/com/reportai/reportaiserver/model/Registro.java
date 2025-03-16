@@ -30,7 +30,7 @@ public class Registro {
    @Column(nullable = false, length = 1000)
    private String descricao;
 
-   @Column(length = 255)
+   @Column(length = 512)
    private String localizacao;
 
    @Column(precision = 10)

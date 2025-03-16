@@ -2,16 +2,28 @@ package com.reportai.reportaiserver.utils;
 
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
+import com.reportai.reportaiserver.repository.CategoriaRepository;
+import com.reportai.reportaiserver.repository.RegistroRepository;
 import com.reportai.reportaiserver.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+import static com.reportai.reportaiserver.utils.RegistroUtils.calcularDistanciaDoCentro;
 
 @Component
 public class Validacoes {
 
    @Autowired
    private UsuarioRepository usuarioRepository;
+
+   @Autowired
+   private CategoriaRepository categoriaRepository;
+
+   @Autowired
+   private RegistroRepository registroRepository;
 
    public static boolean validarCPF(String cpf) {
       if (cpf == "000.000.000-00") {
@@ -91,6 +103,66 @@ public class Validacoes {
       // senha
       if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
+   }
+
+   public void validarRegistro(Registro registro) {
+
+      // localizacao
+      if (registro.getLocalizacao() == null || registro.getLocalizacao().isEmpty() || registro.getLocalizacao().length() > 512) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
+      // titulo
+      if (registro.getTitulo() == null || registro.getTitulo().isEmpty() || registro.getTitulo().length() > 255) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
+      // descricao
+      if (registro.getDescricao() == null || registro.getDescricao().isEmpty() || registro.getDescricao().length() > 1000) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
+      // categoria
+      if (registro.getCategoria() == null) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+      if (registro.getCategoria().getId() == null || !categoriaRepository.findById(registro.getCategoria().getId()).isPresent()) {
+         throw new CustomException(ErrorDictionary.CATEGORIA_NAO_ENCONTRADA);
+      }
+
+      // latitude longitude
+      if (registro.getLatitude() == null || registro.getLongitude() == null) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+      if (calcularDistanciaDoCentro(registro.getLatitude(), registro.getLongitude()) > 30) {
+         throw new CustomException(ErrorDictionary.DISTANCIA_INVALIDA);
+      }
+
+   }
+
+   public void validarImagem(MultipartFile file) {
+
+
+      // formato
+      if (!file.getContentType().equals("image/jpeg") && !file.getContentType().equals("image/png")) {
+         throw new CustomException(ErrorDictionary.FORMATO_INCORRETO);
+      }
+
+
+      // tamanho
+      if (file.getSize() > 1024 * 1024 * 5) {
+         throw new CustomException(ErrorDictionary.TAMANHO_MAXIMO);
+      }
+
+   }
+
+   public void validarRegistroPertenceUsuario(Usuario usuario, Long idRegistro) {
+
+      Registro registro = registroRepository.findById(idRegistro).get();
+      if (!registro.getUsuario().getId().equals(usuario.getId())) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
    }

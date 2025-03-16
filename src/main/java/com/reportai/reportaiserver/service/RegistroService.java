@@ -1,14 +1,10 @@
 package com.reportai.reportaiserver.service;
 
-import com.reportai.reportaiserver.dto.RegistroDTO;
-import com.reportai.reportaiserver.dto.UsuarioDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
-import com.reportai.reportaiserver.mapper.RegistroMapper;
-import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Registro;
-import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.RegistroRepository;
+import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +16,11 @@ public class RegistroService {
 
    @Autowired
    private RegistroRepository repository;
+   @Autowired
+   private Validacoes validacoes;
 
    public Registro save(Registro registro) {
+      validacoes.validarRegistro(registro);
       return repository.save(registro);
    }
 

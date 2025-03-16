@@ -1,7 +1,6 @@
 package com.reportai.reportaiserver.controller;
 
 import com.reportai.reportaiserver.model.Imagem;
-import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.service.ImagemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,7 +7,9 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.ImagemRepository;
+import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,10 +29,21 @@ public class ImagemService {
    @Value("${gcs.bucket-name}")
    private String bucketName;
 
+   @Autowired
+   private Validacoes validacoes;
+
    @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
    private String googleApplicationCredentials;
 
    public Imagem save(MultipartFile file, Long idRegistro) throws IOException {
+
+      validacoes.validarImagem(file);
+
+      // #ToDo #SpringSecurity #Validar se o registro pertence ao usuário logado
+      Usuario usuario = new Usuario();
+      usuario.setId(2L);
+      validacoes.validarRegistroPertenceUsuario(usuario, idRegistro);
+
 
       String url = uploadToGCS(file, idRegistro);
       Imagem imagem = new Imagem();
