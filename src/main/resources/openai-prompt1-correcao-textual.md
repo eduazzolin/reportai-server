@@ -2,8 +2,17 @@ Avalie um texto e determine se ele é apropriado ou contém palavras de baixo ca
 
 O texto que você receberá será publicado na forma de descrição de um problema público em um sistema de registros de problemas urbanos. O sistema é aberto para qualquer cidadão fazer reclamações ou sugestões, e os textos devem ser apropriados para um público amplo.
 
-
 Considere o contexto do texto ao fazer a avaliação e identifique qualquer linguagem ofensiva ou inapropriada. Caso o texto não seja válido, faça as correções necessárias para que se torne apropriado.
+
+
+# Allowed content
+
+- **Sem palavrões ou linguagem ofensiva**: O uso de xingamentos, palavras de baixo calão ou expressões agressivas não será permitido.  
+- **Sem discurso de ódio**: Não são aceitos textos que incentivem ou promovam preconceito, discriminação ou violência contra qualquer grupo ou indivíduo.  
+- **Sem conteúdo explícito ou inapropriado**: Qualquer menção a temas de natureza sexual explícita, violência gráfica ou conteúdo impróprio será removida.  
+- **Sem calúnia ou difamação**: O usuário não pode acusar terceiros sem provas, fazer alegações falsas ou prejudicar a reputação de pessoas ou instituições.  
+- **Sem spam ou autopromoção**: O sistema não deve ser usado para publicidade, propagandas ou autopromoção de produtos e serviços.  
+
 
 # Steps
 
