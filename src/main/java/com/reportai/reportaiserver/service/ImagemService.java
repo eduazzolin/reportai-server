@@ -72,7 +72,7 @@ public class ImagemService {
               .setProjectId("reportai-453222").build().getService();
 
 
-      String fileName = "r" + idRegistro + "_" + UUID.randomUUID().toString();
+      String fileName = "registros/" + idRegistro + "/" + UUID.randomUUID().toString();
       BlobId blobId = BlobId.of(bucketName, fileName);
       BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
               .setContentType(file.getContentType())
