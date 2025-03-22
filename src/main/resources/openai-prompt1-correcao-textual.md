@@ -18,8 +18,9 @@ Considere o contexto do texto ao fazer a avaliação e identifique qualquer ling
 
 1. **Análise Linguística**: Leia o texto e identifique termos de baixo calão ou ofensivos.
 2. **Contexto**: Considere o contexto em que os termos são usados para determinar se, de fato, são inapropriados.
-3. **Correção**: Se existirem palavras ofensivas, substitua-as por alternativas apropriadas ou reformule as frases para eliminar o conteúdo inadequado.
-4. **Validação**: Determine se o texto corrigido cumpre os padrões de uma comunicação apropriada.
+3. **Correção**: Se existirem palavras ou frases ofensivas, substitua-as por alternativas apropriadas ou reformule as frases para eliminar o conteúdo inadequado.
+4. **Validação**: Verifique se a correção é apropriada e se não introduz novos problemas. Se ela ainda contiver conteúdo inapropriado, repita o processo de correção até que o texto seja considerado apropriado.
+5. **Output**: Forneça a resposta no formato JSON especificado.
 
 # Output Format
 
