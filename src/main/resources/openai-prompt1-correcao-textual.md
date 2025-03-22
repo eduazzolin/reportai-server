@@ -66,3 +66,4 @@ Forneça a resposta no seguinte formato JSON:
 - Preste atenção às diferenças culturais e regionais na identificação de linguagem ofensiva.
 - Considere tanto a intenção quanto o impacto das palavras ao realizar a avaliação.
 - Tente fazer o mínimo de alterações possível para manter a integridade do texto original.
+- Só corrija se houver termos fortemente ofensivos ou inadequados;

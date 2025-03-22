@@ -66,6 +66,8 @@ public class ImagemService {
    }
 
    public String uploadToGCS(MultipartFile file, Long idRegistro) throws IOException {
+
+      // #ToDo Poderia ser um serice do Google
       Storage storage = StorageOptions
               .newBuilder()
               .setCredentials(GoogleCredentials.fromStream(new FileInputStream(googleApplicationCredentials)))

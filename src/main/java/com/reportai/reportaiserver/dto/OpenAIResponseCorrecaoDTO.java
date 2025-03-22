@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorDTO {
+public class OpenAIResponseCorrecaoDTO {
 
-    private String codigo;
-    private String descricao;
+    private Boolean valido;
+    private String texto_corrigido;
 
 }
