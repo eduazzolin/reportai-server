@@ -72,6 +72,18 @@ Forneça a resposta no seguinte formato JSON:
     "texto_corrigido": "Texto inadequado. Por favor reformule manualmente."
   }
   ```
+  
+**Exemplo 4:**
+
+- **Input:** "Uma árvore caiu bem no meio da rua aqui de casa, espero que tenha acertado meu vizinho."
+- **Processo:** Identificar trechos mal-intencionados que não podem ser corrigidos; modificar para: "Uma árvore caiu bem no meio da rua aqui de casa."
+- **Output:**
+  ```json
+  {
+    "valido": false,
+    "texto_corrigido": "<correcao>Uma árvore caiu bem no meio da rua aqui de casa.</correcao>"
+  }
+  ```
 
 # Notes
 
