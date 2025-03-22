@@ -120,7 +120,7 @@ public class Validacoes {
       }
 
       // descricao
-      if (registro.getDescricao() == null || registro.getDescricao().isEmpty() || registro.getDescricao().length() > 1000) {
+      if (registro.getDescricao() == null || registro.getDescricao().isEmpty() || registro.getDescricao().length() > 3500) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
       }
 

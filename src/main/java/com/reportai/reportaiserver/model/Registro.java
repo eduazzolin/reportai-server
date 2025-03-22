@@ -27,7 +27,7 @@ public class Registro {
    private String titulo;
 
    @Lob
-   @Column(nullable = false, length = 1000)
+   @Column(nullable = false, length = 3500)
    private String descricao;
 
    @Column(length = 512)

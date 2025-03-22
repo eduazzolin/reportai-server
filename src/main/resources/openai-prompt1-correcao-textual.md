@@ -60,6 +60,18 @@ Forneça a resposta no seguinte formato JSON:
   }
   ```
 
+**Exemplo 3:**
+
+- **Input:** "Mensagem completamente incorrigível."
+- **Processo:** Avaliação do texto sem termos ofensivos ou inadequados.
+- **Output:**
+  ```json
+  {
+    "valido": false,
+    "texto_corrigido": "Texto inadequado. Por favor reformule manualmente."
+  }
+  ```
+
 # Notes
 
 - Ao corrigir o texto, mantenha o significado original tanto quanto possível.

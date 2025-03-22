@@ -11,15 +11,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/dev/openai") // #ToDo #SpringSecurity
+@RequestMapping("/ia")
 @RequiredArgsConstructor
 public class OpenAIController {
 
    @Autowired
    private OpenAIService service;
 
-   @PostMapping
+   @PostMapping("/correcao")
    public ResponseEntity<OpenAIResponseCorrecaoDTO> validarTexto(@RequestBody String texto) {
+      // #ToDo #SpringSecurity
       OpenAIResponseCorrecaoDTO responseDTO = service.getChatCompletion(texto);
       return ResponseEntity.ok(responseDTO);
    }
