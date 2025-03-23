@@ -43,6 +43,9 @@ public class Interacao {
    @JsonBackReference
    private Registro registro;
 
+   @Column()
+   private Boolean isDeleted = false;
+
    public enum TipoInteracao {
       RELEVANTE, CONCLUIDO
    }

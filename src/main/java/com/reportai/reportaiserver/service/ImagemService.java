@@ -10,11 +10,13 @@ import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.ImagemRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -73,6 +75,14 @@ public class ImagemService {
               .setCredentials(GoogleCredentials.fromStream(new FileInputStream(googleApplicationCredentials)))
               .setProjectId("reportai-453222").build().getService();
 
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      Thumbnails.of(file.getInputStream())
+              .scale(1) // Mantém o tamanho original
+              .outputQuality(0.5) // Reduz a qualidade para 50%
+              .outputFormat("jpg")
+              .toOutputStream(outputStream);
+
+      byte[] compressedImage = outputStream.toByteArray();
 
       String fileName = "registros/" + idRegistro + "/" + UUID.randomUUID().toString();
       BlobId blobId = BlobId.of(bucketName, fileName);
@@ -80,7 +90,7 @@ public class ImagemService {
               .setContentType(file.getContentType())
               .build();
 
-      storage.create(blobInfo, file.getBytes());
+      storage.create(blobInfo, compressedImage);
       return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
    }
 
