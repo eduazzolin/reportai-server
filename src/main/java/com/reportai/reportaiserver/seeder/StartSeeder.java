@@ -44,29 +44,58 @@ public class StartSeeder implements CommandLineRunner {
    private void createProcedureRegistroPorDistancia() {
 
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_REGISTROS_POR_DISTANCIA;");
-      String sql = """
-                                 CREATE PROCEDURE SP_REGISTROS_POR_DISTANCIA(
-                                     IN p_lat DOUBLE,
-                                     IN p_long DOUBLE,
-                                     IN p_distancia DOUBLE,
-                                     IN p_paginacao INT,
-                                     IN p_pagina INT
-                                 )
-                                 BEGIN
-                                     DECLARE v_offset INT;
-                                     SET v_offset = (p_pagina - 1) * p_paginacao;
+      jdbcTemplate.execute("""
+                                      /*
+                                       * ficou assim:
+                                       *
+                                       * primeiro filtro: o parametro `p_distancia` define até que distância das coordenadas `p_lat` e `p_long` deve ser retornado os registros.
+                                       *      - estes parâmetros vêm do mapa, as coordenadas são o centro atual do mapa e a distância é baseada no zoom
+                                       *      - tudo isso para que não sejam retornados registros que nem cabem na área que o usuário focou no mapa.
+                                       * segundo filtro: o parâmetro `p_filtro` é aplicado na cláusura where para ser possível filtros personalizados, como de status, por exemplo.
+                                       * terceiro filtro: o parametro `p_limite` define a quantidade de registros retornados após o primeiro filtro ordenados por distância das coordenadas `p_lat` e `p_long`.
+                                       *      - como não há paginação, é definido este teto de registros a serem retornados.
+                                       *      - para 'paginar' basta o usuário navegar no mapa, para ir mudando as coordenadas `p_lat` e `p_long` e consequentemente, a distância dos registros.
+                                       */
               
-                                     SELECT
-                                         *,
-                                         (SQRT(POW(latitude - p_lat, 2) + POW(longitude - p_long, 2))) * 100 AS distancia,
-                                         ROUND((SQRT(POW(latitude - p_lat, 2) + POW(longitude - p_long, 2)) * 100 / 4)) * 4 AS distancia_arredondada
-                                     FROM REGISTRO
-                                     WHERE (SQRT(POW(latitude - p_lat, 2) + POW(longitude - p_long, 2))) * 100 <= p_distancia
-                                     ORDER BY distancia_arredondada ASC, dt_criacao DESC
-                                     LIMIT p_paginacao OFFSET v_offset;
-                                 END;
-              """;
-      jdbcTemplate.execute(sql);
+                                      CREATE PROCEDURE SP_REGISTROS_POR_DISTANCIA(
+                                         IN p_lat DOUBLE,
+                                         IN p_long DOUBLE,
+                                         IN p_distancia DOUBLE,
+                                         IN p_limite INT,
+                                         IN p_filtro VARCHAR(1000),
+                                         IN p_ordenacao VARCHAR(255)
+                                     )
+                                     BEGIN
+                                         /*
+                                          * esta CTE desconsidera registros que estão fora do raio `p_distancia`
+                                          * aplica o filtro de `p_filtro`
+                                          * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância
+                                          */
+                                         SET @REGISTROS_LIMITADOS_POR_DISTANCIA = CONCAT(
+                                                 'WITH REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
+                                                 '                                               (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 AS distancia_do_centro',
+                                                 '                                           FROM REGISTRO ',
+                                                 '                                           WHERE (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 <= ', p_distancia,
+                                                 '                                                    AND ', p_filtro,
+                                                 '                                           ORDER BY distancia_do_centro ASC',
+                                                 '                                           LIMIT ', p_limite, ')');
+              
+              
+                                         /*
+                                          * a query principal serve para ordenar os registros filtrados
+                                          */
+                                         SET @MAIN_QUERY = CONCAT(
+                                                 @REGISTROS_LIMITADOS_POR_DISTANCIA,
+                                                 ' SELECT * FROM REGISTROS_LIMITADOS_POR_DISTANCIA ',
+                                                 ' ORDER BY ', p_ordenacao, ';');
+              
+                                         PREPARE stmt FROM @MAIN_QUERY;
+                                         EXECUTE stmt;
+                                         DEALLOCATE PREPARE stmt;
+                                     END
+              
+              """);
+      ;
    }
 
    private void loadCategoria() {

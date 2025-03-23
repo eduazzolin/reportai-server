@@ -33,23 +33,16 @@ public class RegistroController {
       return ResponseEntity.ok(registroDTO);
    }
 
-   @GetMapping
-   public ResponseEntity<?> listar() {
-      try {
-         return ResponseEntity.ok(service.findAll());
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
-   }
 
    @GetMapping("/distancia")
-   public ResponseEntity<?> listarPorDistancia(@RequestParam double latitude, @RequestParam double longitude, @RequestParam double distancia, @RequestParam int pagina) {
-
-      try {
-         return ResponseEntity.ok(service.findByDistancia(latitude, longitude, distancia, 99999, pagina));
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+   public ResponseEntity<?> listarPorDistancia(
+           @RequestParam double latitude,
+           @RequestParam double longitude,
+           @RequestParam double distancia,
+           @RequestParam String filtro,
+           @RequestParam String ordenacao) {
+      int limite = 100;
+      return ResponseEntity.ok(service.findByDistancia(latitude, longitude, distancia, limite, filtro, ordenacao));
    }
 
    @GetMapping("/{id}")

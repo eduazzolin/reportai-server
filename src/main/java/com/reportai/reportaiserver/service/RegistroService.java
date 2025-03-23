@@ -33,8 +33,8 @@ public class RegistroService {
    }
 
 
-   public List<Registro> findByDistancia(double latitude, double longitude, double distancia, int paginacao, int pagina) {
-      return repository.findByDistance(latitude, longitude, distancia, paginacao, pagina);
+   public List<Registro> findByDistancia(double latitude, double longitude, double distancia, int limite, String filtro, String ordenacao) {
+      return repository.findByDistance(latitude, longitude, distancia, limite, filtro, ordenacao);
    }
 
    public List<Registro> findAll() {
