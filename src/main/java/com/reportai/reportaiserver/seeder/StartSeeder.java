@@ -75,8 +75,9 @@ public class StartSeeder implements CommandLineRunner {
                                                  'WITH REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
                                                  '                                               (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 AS distancia_do_centro',
                                                  '                                           FROM REGISTRO ',
-                                                 '                                           WHERE (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 <= ', p_distancia,
-                                                 '                                                    AND ', p_filtro,
+                                                 '                                           WHERE NOT is_deleted ',
+                                                 '                                                AND (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 <= ', p_distancia,
+                                                 '                                                ', p_filtro,
                                                  '                                           ORDER BY distancia_do_centro ASC',
                                                  '                                           LIMIT ', p_limite, ')');
               
@@ -252,12 +253,17 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadImagem() {
       if (imagemRepository.count() == 0) {
-         imagemRepository.save(Imagem.builder().caminho("https://www.educolorir.com/imagem-numero-1-dl20182.jpg").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://www.educolorir.com/imagem-numero-1-dl20182.jpg").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://www.educolorir.com/imagem-numero-1-dl20182.jpg").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://img.freepik.com/fotos-gratis/numero-2-feito-de-flores-e-grama-isoladas-em-branco_169016-57072.jpg").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://img.freepik.com/fotos-gratis/numero-2-feito-de-flores-e-grama-isoladas-em-branco_169016-57072.jpg").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://img.freepik.com/fotos-gratis/numero-2-feito-de-flores-e-grama-isoladas-em-branco_169016-57072.jpg").registro(registroRepository.findById(2L).get()).build());
+
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/195/f006715b-b157-4b81-b469-08ea674e276f").registro(registroRepository.findById(10L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/194/22c55dd0-6abe-4cf9-9893-3a681f35dcf5").registro(registroRepository.findById(9L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/193/bc9deea6-3b03-46e5-9b8e-2320b86ab5d9").registro(registroRepository.findById(3L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/192/863f6fdb-39cf-44ef-852d-57d827fe305e").registro(registroRepository.findById(4L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/191/9d36330b-9482-460b-806d-db2c2be75a67").registro(registroRepository.findById(5L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/11/d6f82c51-a265-454e-bbe2-4e98377fd8cd").registro(registroRepository.findById(6L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/5f4bfb0a-8016-43ec-9d39-8d09775c6a58").registro(registroRepository.findById(7L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/58838be8-4c64-4b64-8ef2-54bdb309205d").registro(registroRepository.findById(8L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/8dedfa9f-9c7e-486d-a367-4754c93ad63b").registro(registroRepository.findById(2L).get()).build());
+            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/f32f1f94-8811-4d49-b720-a843f0b62e23").registro(registroRepository.findById(1L).get()).build());
 
       }
 
