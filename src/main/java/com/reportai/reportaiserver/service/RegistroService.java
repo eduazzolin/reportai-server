@@ -16,6 +16,7 @@ public class RegistroService {
 
    @Autowired
    private RegistroRepository repository;
+
    @Autowired
    private Validacoes validacoes;
 

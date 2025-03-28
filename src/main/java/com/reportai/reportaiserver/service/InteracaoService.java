@@ -2,6 +2,7 @@ package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.repository.InteracaoRepository;
+import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +13,12 @@ public class InteracaoService {
 
    @Autowired
    private InteracaoRepository repository;
-   
-    public Interacao save(Interacao interacao) {
+
+   @Autowired
+   private Validacoes validacoes;
+
+   public Interacao save(Interacao interacao) {
+      validacoes.validarInteracao(interacao);
       return repository.save(interacao);
    }
 
@@ -21,11 +26,17 @@ public class InteracaoService {
       return repository.findById(id).orElse(null);
    }
 
+   public Interacao findByIdAndUsuarioId(Long id, Long usuarioId) {
+      return repository.findByIdAndUsuarioId(id, usuarioId);
+   }
+
    public List<Interacao> findAll() {
       return repository.findAll();
    }
 
-   public void deleteById(Long id) {
-      repository.deleteById(id);
+
+   public void delete(Interacao interacao) {
+      interacao.setIsDeleted(true);
+      repository.save(interacao);
    }
 }

@@ -1,6 +1,7 @@
 package com.reportai.reportaiserver.controller;
 
 import com.reportai.reportaiserver.dto.RegistroDTO;
+import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.reportai.reportaiserver.exception.ErrorDictionary.SEM_PERMISSAO;
 
 @RestController
 @RequestMapping("/registros")
@@ -51,27 +54,10 @@ public class RegistroController {
       return RegistroMapper.toDTO(registro);
    }
 
-   @GetMapping("/d/{id}")
-   public Registro buscarPorId(@PathVariable Long id) {
-      return service.findById(id);
-   }
-
    @DeleteMapping("/{id}")
    public ResponseEntity<?> excluir(@PathVariable Long id) {
       try {
          service.deleteById(id);
-         return ResponseEntity.ok().build();
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
-   }
-
-   @PostMapping("/interagir")
-   public ResponseEntity<?> interagir(@PathVariable Long id, @RequestBody Interacao interacao) {
-      try {
-         Registro registro = service.findById(id);
-         interacao.setRegistro(registro);
-         interacaoService.save(interacao);
          return ResponseEntity.ok().build();
       } catch (Exception e) {
          return ResponseEntity.badRequest().body(e.getMessage());

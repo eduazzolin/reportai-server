@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.CONCLUIDO;
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.IRRELEVANTE;
 
 @Component
 public class StartSeeder implements CommandLineRunner {
@@ -254,16 +255,16 @@ public class StartSeeder implements CommandLineRunner {
    private void loadImagem() {
       if (imagemRepository.count() == 0) {
 
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/195/f006715b-b157-4b81-b469-08ea674e276f").registro(registroRepository.findById(10L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/194/22c55dd0-6abe-4cf9-9893-3a681f35dcf5").registro(registroRepository.findById(9L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/193/bc9deea6-3b03-46e5-9b8e-2320b86ab5d9").registro(registroRepository.findById(3L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/192/863f6fdb-39cf-44ef-852d-57d827fe305e").registro(registroRepository.findById(4L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/191/9d36330b-9482-460b-806d-db2c2be75a67").registro(registroRepository.findById(5L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/11/d6f82c51-a265-454e-bbe2-4e98377fd8cd").registro(registroRepository.findById(6L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/5f4bfb0a-8016-43ec-9d39-8d09775c6a58").registro(registroRepository.findById(7L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/58838be8-4c64-4b64-8ef2-54bdb309205d").registro(registroRepository.findById(8L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/8dedfa9f-9c7e-486d-a367-4754c93ad63b").registro(registroRepository.findById(2L).get()).build());
-            imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/f32f1f94-8811-4d49-b720-a843f0b62e23").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/195/f006715b-b157-4b81-b469-08ea674e276f").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/194/22c55dd0-6abe-4cf9-9893-3a681f35dcf5").registro(registroRepository.findById(9L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/193/bc9deea6-3b03-46e5-9b8e-2320b86ab5d9").registro(registroRepository.findById(3L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/192/863f6fdb-39cf-44ef-852d-57d827fe305e").registro(registroRepository.findById(4L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/191/9d36330b-9482-460b-806d-db2c2be75a67").registro(registroRepository.findById(5L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/11/d6f82c51-a265-454e-bbe2-4e98377fd8cd").registro(registroRepository.findById(6L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/5f4bfb0a-8016-43ec-9d39-8d09775c6a58").registro(registroRepository.findById(7L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/58838be8-4c64-4b64-8ef2-54bdb309205d").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/8dedfa9f-9c7e-486d-a367-4754c93ad63b").registro(registroRepository.findById(2L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/f32f1f94-8811-4d49-b720-a843f0b62e23").registro(registroRepository.findById(1L).get()).build());
 
       }
 
@@ -271,29 +272,29 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadInteracoes() {
       if (interacaoRepository.count() == 0) {
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(10L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(6L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(10L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(6L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(10L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(IRRELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(IRRELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(IRRELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(6L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+
       }
 
    }

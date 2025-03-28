@@ -2,9 +2,11 @@ package com.reportai.reportaiserver.utils;
 
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.CategoriaRepository;
+import com.reportai.reportaiserver.repository.InteracaoRepository;
 import com.reportai.reportaiserver.repository.RegistroRepository;
 import com.reportai.reportaiserver.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import static com.reportai.reportaiserver.utils.RegistroUtils.calcularDistanciaDoCentro;
+
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.CONCLUIDO;
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.IRRELEVANTE;
 
 @Component
 public class Validacoes {
@@ -24,6 +30,9 @@ public class Validacoes {
 
    @Autowired
    private RegistroRepository registroRepository;
+
+   @Autowired
+   private InteracaoRepository interacaoRepository;
 
    public static boolean validarCPF(String cpf) {
       if (cpf == "000.000.000-00") {
@@ -164,6 +173,40 @@ public class Validacoes {
       if (!registro.getUsuario().getId().equals(usuario.getId())) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
+
+   }
+
+   public void validarInteracao(Interacao interacao){
+      // usuario
+      if (interacao.getUsuario() == null || interacao.getUsuario().getId() == null) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+      if (!usuarioRepository.findById(interacao.getUsuario().getId()).isPresent()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+
+      // registro
+      if (interacao.getRegistro() == null || interacao.getRegistro().getId() == null) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+      if (!registroRepository.findById(interacao.getRegistro().getId()).isPresent()) {
+         throw new CustomException(ErrorDictionary.REGISTRO_NAO_ENCONTRADO);
+      }
+
+      // tipo
+      if (interacao.getTipo() == null) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+      if (interacao.getTipo() != CONCLUIDO && interacao.getTipo() != RELEVANTE && interacao.getTipo() != IRRELEVANTE) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
+      // verificar se já existe interação
+      Interacao interacaoExistente = interacaoRepository.findByUsuarioAndRegistro(interacao.getUsuario(), interacao.getRegistro());
+      if (interacaoExistente != null) {
+         throw new CustomException(ErrorDictionary.INTERACAO_DUPLICADA);
+      }
+
 
    }
 }

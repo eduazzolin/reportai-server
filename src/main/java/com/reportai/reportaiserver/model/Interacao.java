@@ -22,7 +22,7 @@ public class Interacao {
 
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Integer id;
+   private Long id;
 
    @CreationTimestamp
    @Column(updatable = false)
@@ -47,6 +47,6 @@ public class Interacao {
    private Boolean isDeleted = false;
 
    public enum TipoInteracao {
-      RELEVANTE, CONCLUIDO
+      RELEVANTE, IRRELEVANTE, CONCLUIDO
    }
 }
