@@ -2,14 +2,17 @@ package com.reportai.reportaiserver.controller;
 
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.model.Interacao;
+import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.InteracaoService;
+import com.reportai.reportaiserver.service.RegistroService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static com.reportai.reportaiserver.exception.ErrorDictionary.SEM_PERMISSAO;
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
 
 @RestController
 @RequestMapping("/interacoes")
@@ -19,7 +22,16 @@ public class InteracaoController {
    @Autowired
    private InteracaoService service;
 
-    @PostMapping()
+   @Autowired
+   private RegistroService registroService;
+
+   @GetMapping("/relevantes/{idRegistro}")
+   public ResponseEntity<?> buscarRelevantes(@PathVariable Long idRegistro) {
+      Registro registro = registroService.findById(idRegistro);
+      return ResponseEntity.ok(service.findByRegistroAndTipo(registro, RELEVANTE));
+   }
+
+   @PostMapping()
    public ResponseEntity<?> salvar(@RequestBody Interacao interacao) {
       Usuario usuario = new Usuario();
       usuario.setId(2L); // #ToDo #SpringSecurity

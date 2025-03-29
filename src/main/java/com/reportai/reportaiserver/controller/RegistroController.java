@@ -54,6 +54,12 @@ public class RegistroController {
       return RegistroMapper.toDTO(registro);
    }
 
+   @GetMapping("/dev/{id}")
+   public ResponseEntity<Registro> buscarPorId(@PathVariable Long id) {
+      Registro registro = service.findById(id);
+      return ResponseEntity.ok(registro);
+   }
+
    @DeleteMapping("/{id}")
    public ResponseEntity<?> excluir(@PathVariable Long id) {
       try {

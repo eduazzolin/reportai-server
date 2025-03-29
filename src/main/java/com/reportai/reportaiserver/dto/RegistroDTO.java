@@ -34,6 +34,7 @@ public class RegistroDTO {
    private UsuarioResumidoDTO usuario;
 
    private Integer interacoesRelevante;
+   private Integer interacoesIrrelevante;
    private Integer interacoesConcluido;
 
 }
