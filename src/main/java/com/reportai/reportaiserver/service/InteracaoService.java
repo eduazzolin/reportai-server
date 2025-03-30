@@ -1,9 +1,11 @@
 package com.reportai.reportaiserver.service;
 
+import com.reportai.reportaiserver.dto.InteracaoRegistroSimplesDTO;
 import com.reportai.reportaiserver.dto.InteracaoRelevanteDTO;
 import com.reportai.reportaiserver.mapper.InteracaoMapper;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.InteracaoRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,5 +55,18 @@ public class InteracaoService {
       }
 
       return dtos;
+   }
+
+   public InteracaoRegistroSimplesDTO findByRegistroSimples(Registro registro, Usuario usuario) {
+      InteracaoRegistroSimplesDTO dto = new InteracaoRegistroSimplesDTO();
+      dto.setIdRegistro(registro.getId());
+      dto.setIdUsuario(usuario.getId());
+      dto.setQtRelevante(repository.countByRegistroAndTipo(registro, Interacao.TipoInteracao.RELEVANTE));
+      dto.setQtIrrelevante(repository.countByRegistroAndTipo(registro, Interacao.TipoInteracao.IRRELEVANTE));
+      dto.setQtConcluido(repository.countByRegistroAndTipo(registro, Interacao.TipoInteracao.CONCLUIDO));
+      dto.setUsuarioMarcouRelevante(repository.existsByRegistroAndTipoAndUsuario(registro, Interacao.TipoInteracao.RELEVANTE, usuario));
+      dto.setUsuarioMarcouIrrelevante(repository.existsByRegistroAndTipoAndUsuario(registro, Interacao.TipoInteracao.IRRELEVANTE, usuario));
+      dto.setUsuarioMarcouConcluido(repository.existsByRegistroAndTipoAndUsuario(registro, Interacao.TipoInteracao.CONCLUIDO, usuario));
+      return dto;
    }
 }

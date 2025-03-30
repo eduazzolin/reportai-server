@@ -1,5 +1,6 @@
 package com.reportai.reportaiserver.controller;
 
+import com.reportai.reportaiserver.dto.InteracaoRegistroSimplesDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
@@ -29,6 +30,15 @@ public class InteracaoController {
    public ResponseEntity<?> buscarRelevantes(@PathVariable Long idRegistro) {
       Registro registro = registroService.findById(idRegistro);
       return ResponseEntity.ok(service.findByRegistroAndTipo(registro, RELEVANTE));
+   }
+
+   @GetMapping("/{idRegistro}")
+   public ResponseEntity<?> buscarPorRegistroSimples(@PathVariable Long idRegistro) {
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+      Registro registro = registroService.findById(idRegistro);
+      InteracaoRegistroSimplesDTO interacaoRegistroSimplesDTO = service.findByRegistroSimples(registro, usuario);
+      return ResponseEntity.ok(interacaoRegistroSimplesDTO);
    }
 
    @PostMapping()
