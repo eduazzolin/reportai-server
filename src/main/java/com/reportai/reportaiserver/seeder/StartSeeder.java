@@ -67,13 +67,19 @@ public class StartSeeder implements CommandLineRunner {
                                          IN p_ordenacao VARCHAR(255)
                                      )
                                      BEGIN
+                                        /*
+                                         * esta CTE calcula as interações do tipo RELEVANTE por registro
+                                         */
+                                          SET @INTERACOES_RELEVANTES = ' WITH INTERACOES_RELEVANTES AS (SELECT ID_REGISTRO, COUNT(ID) AS interacoesRelevante FROM INTERACAO WHERE TIPO = ''RELEVANTE'' GROUP BY ID_REGISTRO ) ';
+              
+              
                                          /*
                                           * esta CTE desconsidera registros que estão fora do raio `p_distancia`
                                           * aplica o filtro de `p_filtro`
                                           * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância
                                           */
                                          SET @REGISTROS_LIMITADOS_POR_DISTANCIA = CONCAT(
-                                                 'WITH REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
+                                                 ', REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
                                                  '                                               (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 AS distancia_do_centro',
                                                  '                                           FROM REGISTRO ',
                                                  '                                           WHERE NOT is_deleted ',
@@ -87,8 +93,10 @@ public class StartSeeder implements CommandLineRunner {
                                           * a query principal serve para ordenar os registros filtrados
                                           */
                                          SET @MAIN_QUERY = CONCAT(
+                                                 @INTERACOES_RELEVANTES,
                                                  @REGISTROS_LIMITADOS_POR_DISTANCIA,
-                                                 ' SELECT * FROM REGISTROS_LIMITADOS_POR_DISTANCIA ',
+                                                 ' SELECT R.*, I.interacoesRelevante FROM REGISTROS_LIMITADOS_POR_DISTANCIA R',
+                                                 ' LEFT JOIN INTERACOES_RELEVANTES I ON R.ID = I.ID_REGISTRO',
                                                  ' ORDER BY ', p_ordenacao, ';');
               
                                          PREPARE stmt FROM @MAIN_QUERY;

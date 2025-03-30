@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.reportai.reportaiserver.exception.ErrorDictionary.SEM_PERMISSAO;
 
 @RestController
@@ -45,7 +48,16 @@ public class RegistroController {
            @RequestParam String filtro,
            @RequestParam String ordenacao) {
       int limite = 100;
-      return ResponseEntity.ok(service.findByDistancia(latitude, longitude, distancia, limite, filtro, ordenacao));
+
+      List<Registro> registros = service.findByDistancia(latitude, longitude, distancia, limite, filtro, ordenacao);
+      ArrayList<RegistroDTO> registrosDTO = new ArrayList<>();
+
+      for (Registro registro : registros) {
+         RegistroDTO registroDTO = RegistroMapper.toDTO(registro);
+         registrosDTO.add(registroDTO);
+      }
+
+      return ResponseEntity.ok(registrosDTO);
    }
 
    @GetMapping("/{id}")
