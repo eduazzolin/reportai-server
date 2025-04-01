@@ -16,8 +16,8 @@ public class InteracaoRegistroSimplesDTO {
    private Long qtRelevante;
    private Long qtIrrelevante;
    private Long qtConcluido;
-   private Boolean usuarioMarcouRelevante;
-   private Boolean usuarioMarcouIrrelevante;
-   private Boolean usuarioMarcouConcluido;
+   private Long usuarioInteracaoIdRelevante;
+   private Long usuarioInteracaoIdIrrelevante;
+   private Long usuarioInteracaoIdConcluido;
 
 }
