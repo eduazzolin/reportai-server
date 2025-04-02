@@ -202,7 +202,7 @@ public class Validacoes {
       }
 
       // verificar se já existe interação
-      Interacao interacaoExistente = interacaoRepository.findByUsuarioAndRegistro(interacao.getUsuario(), interacao.getRegistro());
+      Interacao interacaoExistente = interacaoRepository.findByUsuarioAndRegistroAndTipoAndIsDeleted(interacao.getUsuario(), interacao.getRegistro(), interacao.getTipo(), false);
       if (interacaoExistente != null) {
          throw new CustomException(ErrorDictionary.INTERACAO_DUPLICADA);
       }

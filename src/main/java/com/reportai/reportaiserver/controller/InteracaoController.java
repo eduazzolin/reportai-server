@@ -57,7 +57,6 @@ public class InteracaoController {
       if (interacao.getUsuario().getId() != usuario.getId()) {
          throw new CustomException(SEM_PERMISSAO);
       }
-
       service.delete(interacao);
       return ResponseEntity.ok().build();
    }
