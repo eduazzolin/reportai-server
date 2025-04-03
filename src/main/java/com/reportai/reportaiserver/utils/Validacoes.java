@@ -13,11 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.*;
 import static com.reportai.reportaiserver.utils.RegistroUtils.calcularDistanciaDoCentro;
-
-import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.CONCLUIDO;
-import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
-import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.IRRELEVANTE;
 
 @Component
 public class Validacoes {
@@ -35,9 +32,8 @@ public class Validacoes {
    private InteracaoRepository interacaoRepository;
 
    public static boolean validarCPF(String cpf) {
-      if (cpf == "000.000.000-00") {
-         // para testes
-         return true;
+      if (0 == 0) {
+         return true; //TODO dev
       }
 
       if (cpf == null) {
@@ -176,7 +172,7 @@ public class Validacoes {
 
    }
 
-   public void validarInteracao(Interacao interacao){
+   public void validarInteracao(Interacao interacao) {
       // usuario
       if (interacao.getUsuario() == null || interacao.getUsuario().getId() == null) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);

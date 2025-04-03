@@ -1,13 +1,22 @@
 package com.reportai.reportaiserver.service;
 
+import com.reportai.reportaiserver.dto.MeusRegistrosDTO;
+import com.reportai.reportaiserver.dto.RegistroDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.Registro;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.RegistroRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,4 +55,26 @@ public class RegistroService {
       repository.deleteById(id);
    }
 
+   public MeusRegistrosDTO listarMeusRegistros(Usuario usuario, int pagina, int limite) {
+
+      Pageable pageable = PageRequest.of(pagina, limite, Sort.by("isConcluido").and(Sort.by("dtCriacao").descending()));
+      Page<Registro> resultado = repository.findByUsuario(usuario, pageable);
+
+      List<Registro> registros = resultado.getContent();
+      int totalPaginas = resultado.getTotalPages();
+      long totalRegistros = resultado.getTotalElements();
+
+      List<RegistroDTO> registrosDTO = new ArrayList<>();
+      for (Registro registro : registros) {
+         registrosDTO.add(RegistroMapper.toDTO(registro));
+      }
+
+      return MeusRegistrosDTO.builder()
+              .pagina(pagina)
+              .limite(limite)
+              .totalPaginas(totalPaginas)
+              .totalRegistros(totalRegistros)
+              .registros(registrosDTO)
+              .build();
+   }
 }

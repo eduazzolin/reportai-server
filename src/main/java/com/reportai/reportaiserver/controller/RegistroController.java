@@ -1,9 +1,8 @@
 package com.reportai.reportaiserver.controller;
 
+import com.reportai.reportaiserver.dto.MeusRegistrosDTO;
 import com.reportai.reportaiserver.dto.RegistroDTO;
-import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
-import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.InteracaoService;
@@ -15,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.reportai.reportaiserver.exception.ErrorDictionary.SEM_PERMISSAO;
 
 @RestController
 @RequestMapping("/registros")
@@ -58,6 +55,16 @@ public class RegistroController {
       }
 
       return ResponseEntity.ok(registrosDTO);
+   }
+
+   @GetMapping("/meus-registros")
+   public ResponseEntity<?> listarMeusRegistros(@RequestParam int pagina, @RequestParam int limite) {
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+
+      MeusRegistrosDTO meusRegistrosDTO = service.listarMeusRegistros(usuario, pagina, limite);
+
+      return ResponseEntity.ok(meusRegistrosDTO);
    }
 
    @GetMapping("/{id}")
