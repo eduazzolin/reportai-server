@@ -48,6 +48,12 @@ public class Registro {
    private LocalDateTime dtModificacao;
 
    @Column()
+   private LocalDateTime dtConclusao;
+
+   @Column()
+   private LocalDateTime dtExclusao;
+
+   @Column()
    private Boolean isConcluido = false;
 
    @Column()

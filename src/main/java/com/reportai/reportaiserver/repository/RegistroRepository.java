@@ -23,6 +23,5 @@ public interface RegistroRepository extends JpaRepository<Registro, Long> {
            @Param("ordenacao") String ordenacao
    );
 
-   Page<Registro> findByUsuario(Usuario usuario, Pageable pageable);
-
+   Page<Registro> findByUsuarioAndIsDeleted(Usuario usuario, boolean isDeleted, Pageable pageable);
 }

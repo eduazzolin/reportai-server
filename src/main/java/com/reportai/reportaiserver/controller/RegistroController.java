@@ -36,6 +36,15 @@ public class RegistroController {
       return ResponseEntity.ok(registroDTO);
    }
 
+   @PutMapping("/{id}/concluir")
+   public ResponseEntity<?> concluir(@PathVariable Long id) {
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+
+      service.ConcluirById(id, usuario);
+      return ResponseEntity.ok().build();
+   }
+
 
    @GetMapping("/distancia")
    public ResponseEntity<?> listarPorDistancia(
@@ -81,12 +90,11 @@ public class RegistroController {
 
    @DeleteMapping("/{id}")
    public ResponseEntity<?> excluir(@PathVariable Long id) {
-      try {
-         service.deleteById(id);
-         return ResponseEntity.ok().build();
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+
+      service.deleteById(id, usuario);
+      return ResponseEntity.ok().build();
    }
 
 

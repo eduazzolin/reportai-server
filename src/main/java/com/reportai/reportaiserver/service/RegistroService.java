@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,14 +52,22 @@ public class RegistroService {
       return repository.findAll();
    }
 
-   public void deleteById(Long id) {
-      repository.deleteById(id);
+   public void deleteById(Long id, Usuario usuario) {
+      Registro registro = findById(id);
+
+      if (!registro.getUsuario().getId().equals(usuario.getId())) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+
+      registro.setIsDeleted(true);
+      registro.setDtExclusao(LocalDateTime.now());
+      repository.save(registro);
    }
 
    public MeusRegistrosDTO listarMeusRegistros(Usuario usuario, int pagina, int limite) {
 
       Pageable pageable = PageRequest.of(pagina, limite, Sort.by("isConcluido").and(Sort.by("dtCriacao").descending()));
-      Page<Registro> resultado = repository.findByUsuario(usuario, pageable);
+      Page<Registro> resultado = repository.findByUsuarioAndIsDeleted(usuario, false, pageable);
 
       List<Registro> registros = resultado.getContent();
       int totalPaginas = resultado.getTotalPages();
@@ -76,5 +85,17 @@ public class RegistroService {
               .totalRegistros(totalRegistros)
               .registros(registrosDTO)
               .build();
+   }
+
+   public void ConcluirById(Long id, Usuario usuario) {
+      Registro registro = findById(id);
+
+      if (!registro.getUsuario().getId().equals(usuario.getId())) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+
+      registro.setIsConcluido(true);
+      registro.setDtConclusao(LocalDateTime.now());
+      repository.save(registro);
    }
 }

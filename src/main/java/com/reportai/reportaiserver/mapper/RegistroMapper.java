@@ -19,6 +19,8 @@ public class RegistroMapper {
       dto.setLongitude(entity.getLongitude());
       dto.setDtCriacao(entity.getDtCriacao());
       dto.setDtModificacao(entity.getDtModificacao());
+      dto.setDtConclusao(entity.getDtConclusao());
+      dto.setDtExclusao(entity.getDtExclusao());
       dto.setIsConcluido(entity.getIsConcluido());
       dto.setIsDeleted(entity.getIsDeleted());
 

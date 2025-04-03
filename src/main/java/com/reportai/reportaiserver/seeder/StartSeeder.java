@@ -154,9 +154,10 @@ public class StartSeeder implements CommandLineRunner {
                  .latitude(-27.57841321989771)
                  .longitude(-48.538419398201704)
                  .categoria(categoriaRepository.findById(2L).get())
-                 .isConcluido(false)
+                 .isConcluido(true)
+                 .dtConclusao(java.time.LocalDateTime.now())
                  .isDeleted(false)
-                 .usuario(usuarioRepository.findById(3L).get())
+                 .usuario(usuarioRepository.findById(2L).get())
                  .build());
 
          registroRepository.save(Registro.builder()
@@ -269,7 +270,7 @@ public class StartSeeder implements CommandLineRunner {
          imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/192/863f6fdb-39cf-44ef-852d-57d827fe305e").registro(registroRepository.findById(4L).get()).build());
          imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/191/9d36330b-9482-460b-806d-db2c2be75a67").registro(registroRepository.findById(5L).get()).build());
          imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/11/d6f82c51-a265-454e-bbe2-4e98377fd8cd").registro(registroRepository.findById(6L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/5f4bfb0a-8016-43ec-9d39-8d09775c6a58").registro(registroRepository.findById(7L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/11/1c9c1488-0409-4c5b-909b-e5f32e2874f9").registro(registroRepository.findById(7L).get()).build());
          imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/34/58838be8-4c64-4b64-8ef2-54bdb309205d").registro(registroRepository.findById(8L).get()).build());
          imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/8dedfa9f-9c7e-486d-a367-4754c93ad63b").registro(registroRepository.findById(2L).get()).build());
          imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/12/f32f1f94-8811-4d49-b720-a843f0b62e23").registro(registroRepository.findById(1L).get()).build());
