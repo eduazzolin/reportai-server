@@ -1,7 +1,9 @@
 package com.reportai.reportaiserver.controller;
 
+import com.reportai.reportaiserver.dto.MeusRegistrosDTO;
 import com.reportai.reportaiserver.dto.TokenDTO;
 import com.reportai.reportaiserver.dto.UsuarioDTO;
+import com.reportai.reportaiserver.dto.UsuariosPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
@@ -61,21 +63,15 @@ public class UsuarioController {
 
 
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarTodos() {
+   public ResponseEntity<?> buscarTodos(@RequestParam int pagina, @RequestParam int limite) {
       Usuario usuario = usuarioService.findAtivosById(1L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      List<Usuario> usuarios = service.findAll();
-      ArrayList<UsuarioDTO> usuariosDTO = new ArrayList<>();
-      for (Usuario usuarioObj : usuarios) {
-         UsuarioDTO usuarioDTO = UsuarioMapper.toDTO(usuarioObj);
-         usuariosDTO.add(usuarioDTO);
-      }
-
-      return ResponseEntity.ok(usuariosDTO);
+      UsuariosPaginadoDTO usuariosPaginadoDTO = service.findAtivos(pagina, limite);
+      return ResponseEntity.ok(usuariosPaginadoDTO);
    }
 
 

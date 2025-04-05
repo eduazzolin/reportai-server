@@ -1,6 +1,7 @@
 package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.dto.UsuarioDTO;
+import com.reportai.reportaiserver.dto.UsuariosPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
@@ -9,8 +10,13 @@ import com.reportai.reportaiserver.repository.UsuarioRepository;
 import com.reportai.reportaiserver.utils.UsuarioUtils;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,8 +75,26 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public List<Usuario> findAll() {
-      return repository.findAll();
+   public UsuariosPaginadoDTO findAtivos(int pagina, int limite) {
+      Pageable pageable = PageRequest.of(pagina, limite, Sort.by("nome"));
+      Page<Usuario> resultado = repository.findByIsDeleted(false, pageable);
+
+      List<Usuario> usuarios = resultado.getContent();
+      int totalPaginas = resultado.getTotalPages();
+      long totalUsuarios = resultado.getTotalElements();
+
+      List<UsuarioDTO> usuariosDTO = new ArrayList<>();
+      for (Usuario usuario : usuarios) {
+         usuariosDTO.add(UsuarioMapper.toDTO(usuario));
+      }
+
+      return UsuariosPaginadoDTO.builder()
+              .pagina(pagina)
+              .limite(limite)
+              .totalPaginas(totalPaginas)
+              .totalUsuarios(totalUsuarios)
+              .usuarios(usuariosDTO)
+              .build();
    }
 
    public void deleteById(Long id) {
