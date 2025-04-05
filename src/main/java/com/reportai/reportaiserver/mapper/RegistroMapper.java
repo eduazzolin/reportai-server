@@ -19,6 +19,8 @@ public class RegistroMapper {
       dto.setLongitude(entity.getLongitude());
       dto.setDtCriacao(entity.getDtCriacao());
       dto.setDtModificacao(entity.getDtModificacao());
+      dto.setDtConclusao(entity.getDtConclusao());
+      dto.setDtExclusao(entity.getDtExclusao());
       dto.setIsConcluido(entity.getIsConcluido());
       dto.setIsDeleted(entity.getIsDeleted());
 
@@ -32,18 +34,22 @@ public class RegistroMapper {
       dto.setUsuario(usuarioResumidoDTO);
 
       Integer interacoesRelevante = 0;
+      Integer interacoesIrrelevante = 0;
       Integer interacoesConcluido = 0;
 
       if (entity.getInteracoes() != null) {
          for (Interacao interacao : entity.getInteracoes()) {
             if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE)) {
                interacoesRelevante++;
+            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.IRRELEVANTE)) {
+               interacoesIrrelevante++;
             } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
                interacoesConcluido++;
             }
          }
       }
       dto.setInteracoesRelevante(interacoesRelevante);
+      dto.setInteracoesIrrelevante(interacoesIrrelevante);
       dto.setInteracoesConcluido(interacoesConcluido);
 
       return dto;

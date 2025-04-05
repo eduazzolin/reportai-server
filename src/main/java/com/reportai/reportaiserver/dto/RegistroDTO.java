@@ -24,6 +24,8 @@ public class RegistroDTO {
    private Double longitude;
    private LocalDateTime dtCriacao;
    private LocalDateTime dtModificacao;
+   private LocalDateTime dtConclusao;
+   private LocalDateTime dtExclusao;
    private Boolean isConcluido = false;
    private Boolean isDeleted = false;
 
@@ -34,6 +36,7 @@ public class RegistroDTO {
    private UsuarioResumidoDTO usuario;
 
    private Integer interacoesRelevante;
+   private Integer interacoesIrrelevante;
    private Integer interacoesConcluido;
 
 }

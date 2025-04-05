@@ -48,6 +48,12 @@ public class Registro {
    private LocalDateTime dtModificacao;
 
    @Column()
+   private LocalDateTime dtConclusao;
+
+   @Column()
+   private LocalDateTime dtExclusao;
+
+   @Column()
    private Boolean isConcluido = false;
 
    @Column()
@@ -58,14 +64,14 @@ public class Registro {
    private Categoria categoria;
 
    @ManyToOne
-   @JoinColumn(name = "id_usuario", nullable = false)
+   @JoinColumn(nullable = false)
    private Usuario usuario;
 
-   @OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @OneToMany(mappedBy = "registro", fetch = FetchType.LAZY)
    @JsonManagedReference
    private List<Imagem> imagens;
 
-   @OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @OneToMany(mappedBy = "registro", fetch = FetchType.LAZY)
    @JsonManagedReference
    private List<Interacao> interacoes;
 

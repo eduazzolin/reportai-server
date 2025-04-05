@@ -21,8 +21,9 @@ public class Usuario {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
 
-   @Column(length = 50)
-   private String role;
+   @Enumerated(EnumType.STRING)
+   @Column(nullable = false)
+   private Usuario.Roles role;
 
    private String nome;
 
@@ -44,5 +45,9 @@ public class Usuario {
 
    @Column()
    private Boolean isDeleted = false;
+
+   public enum Roles {
+      USUARIO, ADMIN
+   }
 
 }

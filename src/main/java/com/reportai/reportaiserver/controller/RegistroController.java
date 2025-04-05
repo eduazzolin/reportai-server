@@ -1,8 +1,8 @@
 package com.reportai.reportaiserver.controller;
 
+import com.reportai.reportaiserver.dto.MeusRegistrosDTO;
 import com.reportai.reportaiserver.dto.RegistroDTO;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
-import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.InteracaoService;
@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/registros")
@@ -33,23 +36,44 @@ public class RegistroController {
       return ResponseEntity.ok(registroDTO);
    }
 
-   @GetMapping
-   public ResponseEntity<?> listar() {
-      try {
-         return ResponseEntity.ok(service.findAll());
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+   @PutMapping("/{id}/concluir")
+   public ResponseEntity<?> concluir(@PathVariable Long id) {
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+
+      service.ConcluirById(id, usuario);
+      return ResponseEntity.ok().build();
    }
 
-   @GetMapping("/distancia")
-   public ResponseEntity<?> listarPorDistancia(@RequestParam double latitude, @RequestParam double longitude, @RequestParam double distancia, @RequestParam int pagina) {
 
-      try {
-         return ResponseEntity.ok(service.findByDistancia(latitude, longitude, distancia, 99999, pagina));
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
+   @GetMapping("/distancia")
+   public ResponseEntity<?> listarPorDistancia(
+           @RequestParam double latitude,
+           @RequestParam double longitude,
+           @RequestParam double distancia,
+           @RequestParam String filtro,
+           @RequestParam String ordenacao) {
+      int limite = 100;
+
+      List<Registro> registros = service.findByDistancia(latitude, longitude, distancia, limite, filtro, ordenacao);
+      ArrayList<RegistroDTO> registrosDTO = new ArrayList<>();
+
+      for (Registro registro : registros) {
+         RegistroDTO registroDTO = RegistroMapper.toDTO(registro);
+         registrosDTO.add(registroDTO);
       }
+
+      return ResponseEntity.ok(registrosDTO);
+   }
+
+   @GetMapping("/meus-registros")
+   public ResponseEntity<?> listarMeusRegistros(@RequestParam int pagina, @RequestParam int limite) {
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+
+      MeusRegistrosDTO meusRegistrosDTO = service.listarMeusRegistros(usuario, pagina, limite);
+
+      return ResponseEntity.ok(meusRegistrosDTO);
    }
 
    @GetMapping("/{id}")
@@ -58,31 +82,19 @@ public class RegistroController {
       return RegistroMapper.toDTO(registro);
    }
 
-   @GetMapping("/d/{id}")
-   public Registro buscarPorId(@PathVariable Long id) {
-      return service.findById(id);
+   @GetMapping("/dev/{id}")
+   public ResponseEntity<Registro> buscarPorId(@PathVariable Long id) {
+      Registro registro = service.findById(id);
+      return ResponseEntity.ok(registro);
    }
 
    @DeleteMapping("/{id}")
    public ResponseEntity<?> excluir(@PathVariable Long id) {
-      try {
-         service.deleteById(id);
-         return ResponseEntity.ok().build();
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
-   }
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
 
-   @PostMapping("/interagir")
-   public ResponseEntity<?> interagir(@PathVariable Long id, @RequestBody Interacao interacao) {
-      try {
-         Registro registro = service.findById(id);
-         interacao.setRegistro(registro);
-         interacaoService.save(interacao);
-         return ResponseEntity.ok().build();
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      service.deleteById(id, usuario);
+      return ResponseEntity.ok().build();
    }
 
 

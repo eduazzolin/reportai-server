@@ -18,6 +18,9 @@ public enum ErrorDictionary {
    ,TAMANHO_MAXIMO("ERRO-014", "Tamanho máximo de imagem excedido. Limite de 5MB.")
    ,USUARIO_SEM_PERMISSAO("ERRO-015", "Usuário sem permissão para realizar a operação.")
    ,ERRO_OPENAI("ERRO-016", "Erro ao se comunicar com o serviço OpenAI.")
+   ,INTERACAO_DUPLICADA("ERRO-017", "Interação já existe para o registro.")
+   ,SEM_PERMISSAO("ERRO-018", "Usuário sem permissão para realizar a operação.")
+   ,ERRO_GCS("ERRO-019", "Erro ao se comunicar com o Google Cloud Storage.")
    ;
    private final String codigo;
    private final String descricao;

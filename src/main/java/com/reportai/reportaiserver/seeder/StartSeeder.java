@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.CONCLUIDO;
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.IRRELEVANTE;
+import static com.reportai.reportaiserver.model.Usuario.Roles.ADMIN;
+import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
 
 @Component
 public class StartSeeder implements CommandLineRunner {
@@ -44,29 +47,67 @@ public class StartSeeder implements CommandLineRunner {
    private void createProcedureRegistroPorDistancia() {
 
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_REGISTROS_POR_DISTANCIA;");
-      String sql = """
-                                 CREATE PROCEDURE SP_REGISTROS_POR_DISTANCIA(
-                                     IN p_lat DOUBLE,
-                                     IN p_long DOUBLE,
-                                     IN p_distancia DOUBLE,
-                                     IN p_paginacao INT,
-                                     IN p_pagina INT
-                                 )
-                                 BEGIN
-                                     DECLARE v_offset INT;
-                                     SET v_offset = (p_pagina - 1) * p_paginacao;
+      jdbcTemplate.execute("""
+                                      /*
+                                       * ficou assim:
+                                       *
+                                       * primeiro filtro: o parametro `p_distancia` define até que distância das coordenadas `p_lat` e `p_long` deve ser retornado os registros.
+                                       *      - estes parâmetros vêm do mapa, as coordenadas são o centro atual do mapa e a distância é baseada no zoom
+                                       *      - tudo isso para que não sejam retornados registros que nem cabem na área que o usuário focou no mapa.
+                                       * segundo filtro: o parâmetro `p_filtro` é aplicado na cláusura where para ser possível filtros personalizados, como de status, por exemplo.
+                                       * terceiro filtro: o parametro `p_limite` define a quantidade de registros retornados após o primeiro filtro ordenados por distância das coordenadas `p_lat` e `p_long`.
+                                       *      - como não há paginação, é definido este teto de registros a serem retornados.
+                                       *      - para 'paginar' basta o usuário navegar no mapa, para ir mudando as coordenadas `p_lat` e `p_long` e consequentemente, a distância dos registros.
+                                       */
               
-                                     SELECT
-                                         *,
-                                         (SQRT(POW(latitude - p_lat, 2) + POW(longitude - p_long, 2))) * 100 AS distancia,
-                                         ROUND((SQRT(POW(latitude - p_lat, 2) + POW(longitude - p_long, 2)) * 100 / 4)) * 4 AS distancia_arredondada
-                                     FROM REGISTRO
-                                     WHERE (SQRT(POW(latitude - p_lat, 2) + POW(longitude - p_long, 2))) * 100 <= p_distancia
-                                     ORDER BY distancia_arredondada ASC, dt_criacao DESC
-                                     LIMIT p_paginacao OFFSET v_offset;
-                                 END;
-              """;
-      jdbcTemplate.execute(sql);
+                                      CREATE PROCEDURE SP_REGISTROS_POR_DISTANCIA(
+                                         IN p_lat DOUBLE,
+                                         IN p_long DOUBLE,
+                                         IN p_distancia DOUBLE,
+                                         IN p_limite INT,
+                                         IN p_filtro VARCHAR(1000),
+                                         IN p_ordenacao VARCHAR(255)
+                                     )
+                                     BEGIN
+                                        /*
+                                         * esta CTE calcula as interações do tipo RELEVANTE por registro
+                                         */
+                                          SET @INTERACOES_RELEVANTES = ' WITH INTERACOES_RELEVANTES AS (SELECT ID_REGISTRO, COUNT(ID) AS interacoesRelevante FROM INTERACAO WHERE TIPO = ''RELEVANTE'' GROUP BY ID_REGISTRO ) ';
+              
+              
+                                         /*
+                                          * esta CTE desconsidera registros que estão fora do raio `p_distancia`
+                                          * aplica o filtro de `p_filtro`
+                                          * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância
+                                          */
+                                         SET @REGISTROS_LIMITADOS_POR_DISTANCIA = CONCAT(
+                                                 ', REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
+                                                 '                                               (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 AS distancia_do_centro',
+                                                 '                                           FROM REGISTRO ',
+                                                 '                                           WHERE NOT is_deleted ',
+                                                 '                                                AND (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 <= ', p_distancia,
+                                                 '                                                ', p_filtro,
+                                                 '                                           ORDER BY distancia_do_centro ASC',
+                                                 '                                           LIMIT ', p_limite, ')');
+              
+              
+                                         /*
+                                          * a query principal serve para ordenar os registros filtrados
+                                          */
+                                         SET @MAIN_QUERY = CONCAT(
+                                                 @INTERACOES_RELEVANTES,
+                                                 @REGISTROS_LIMITADOS_POR_DISTANCIA,
+                                                 ' SELECT R.*, I.interacoesRelevante FROM REGISTROS_LIMITADOS_POR_DISTANCIA R',
+                                                 ' LEFT JOIN INTERACOES_RELEVANTES I ON R.ID = I.ID_REGISTRO',
+                                                 ' ORDER BY ', p_ordenacao, ';');
+              
+                                         PREPARE stmt FROM @MAIN_QUERY;
+                                         EXECUTE stmt;
+                                         DEALLOCATE PREPARE stmt;
+                                     END
+              
+              """);
+      ;
    }
 
    private void loadCategoria() {
@@ -86,11 +127,11 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         usuarioRepository.save(Usuario.builder().role("ADMIN").nome("User").email("Admin").senha("123456").cpf("111111").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("User").email("Admin").senha("123456").cpf("111111").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
       }
    }
 
@@ -115,9 +156,10 @@ public class StartSeeder implements CommandLineRunner {
                  .latitude(-27.57841321989771)
                  .longitude(-48.538419398201704)
                  .categoria(categoriaRepository.findById(2L).get())
-                 .isConcluido(false)
+                 .isConcluido(true)
+                 .dtConclusao(java.time.LocalDateTime.now())
                  .isDeleted(false)
-                 .usuario(usuarioRepository.findById(3L).get())
+                 .usuario(usuarioRepository.findById(2L).get())
                  .build());
 
          registroRepository.save(Registro.builder()
@@ -223,12 +265,17 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadImagem() {
       if (imagemRepository.count() == 0) {
-         imagemRepository.save(Imagem.builder().caminho("https://www.educolorir.com/imagem-numero-1-dl20182.jpg").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://www.educolorir.com/imagem-numero-1-dl20182.jpg").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://www.educolorir.com/imagem-numero-1-dl20182.jpg").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://img.freepik.com/fotos-gratis/numero-2-feito-de-flores-e-grama-isoladas-em-branco_169016-57072.jpg").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://img.freepik.com/fotos-gratis/numero-2-feito-de-flores-e-grama-isoladas-em-branco_169016-57072.jpg").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://img.freepik.com/fotos-gratis/numero-2-feito-de-flores-e-grama-isoladas-em-branco_169016-57072.jpg").registro(registroRepository.findById(2L).get()).build());
+
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D4/de348b2c-d602-4064-8718-1127ed133675").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D1/6b2c60c6-02fb-4cda-85b3-30f471720e1f").registro(registroRepository.findById(9L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D1/e394123d-a84a-41d5-8ef6-3eaf68b1b59d").registro(registroRepository.findById(3L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D10/0eb9e70f-eb0d-43db-a1eb-e1c0d4dedba3").registro(registroRepository.findById(4L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D10/d98fa2ac-a31e-458b-a9d5-9043e1c86349").registro(registroRepository.findById(5L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D10/f8fc3d0e-a012-442f-a4de-81b91e2663e8").registro(registroRepository.findById(6L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D4/90c58f98-76db-4fa9-b558-4af103ff6646").registro(registroRepository.findById(7L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D4/a4e2d8b0-f13f-418f-98f5-0a059c5064dd").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D1/51f27fe7-efc5-4aa3-8914-1284264ec4fc").registro(registroRepository.findById(2L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D6/20b345a6-5bea-460d-b07b-e079549c0d59").registro(registroRepository.findById(1L).get()).build());
 
       }
 
@@ -236,29 +283,29 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadInteracoes() {
       if (interacaoRepository.count() == 0) {
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(10L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(6L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(10L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(6L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(10L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(IRRELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(IRRELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(2L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(3L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(IRRELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(6L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+
       }
 
    }

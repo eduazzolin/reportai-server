@@ -1,6 +1,7 @@
 package com.reportai.reportaiserver.controller;
 
 import com.reportai.reportaiserver.model.Imagem;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.ImagemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +40,11 @@ public class ImagemController {
 
    @DeleteMapping("/{id}")
    public ResponseEntity<?> excluir(@PathVariable Long id) {
-      try {
-         service.deleteById(id);
-         return ResponseEntity.ok().build();
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      Usuario usuario = new Usuario();
+      usuario.setId(2L); // #ToDo #SpringSecurity
+
+      service.deleteById(id, usuario);
+      return ResponseEntity.ok().build();
    }
 
    @PostMapping

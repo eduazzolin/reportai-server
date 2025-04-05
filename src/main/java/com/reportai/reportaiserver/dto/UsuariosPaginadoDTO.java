@@ -1,22 +1,20 @@
 package com.reportai.reportaiserver.dto;
 
-import com.reportai.reportaiserver.model.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioDTO {
-
-   private Long id;
-   private String nome;
-   private String email;
-   private String cpf;
-   private Usuario.Roles role;
-
+public class UsuariosPaginadoDTO {
+   private int pagina;
+   private int limite;
+   private int totalPaginas;
+   private Long totalUsuarios;
+   private List<UsuarioDTO> usuarios;
 }
-
