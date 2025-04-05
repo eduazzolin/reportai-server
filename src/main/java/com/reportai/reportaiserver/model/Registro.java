@@ -67,11 +67,11 @@ public class Registro {
    @JoinColumn(nullable = false)
    private Usuario usuario;
 
-   @OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @OneToMany(mappedBy = "registro", fetch = FetchType.LAZY)
    @JsonManagedReference
    private List<Imagem> imagens;
 
-   @OneToMany(mappedBy = "registro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @OneToMany(mappedBy = "registro", fetch = FetchType.LAZY)
    @JsonManagedReference
    private List<Interacao> interacoes;
 

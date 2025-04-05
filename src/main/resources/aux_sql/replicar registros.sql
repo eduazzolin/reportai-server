@@ -20,4 +20,5 @@ SELECT descricao,
        titulo,
        categoria_id,
        usuario_id
-FROM registro;
+FROM registro
+WHERE usuario_id = 2

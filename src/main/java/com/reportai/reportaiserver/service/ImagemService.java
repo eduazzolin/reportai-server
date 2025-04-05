@@ -5,6 +5,8 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.reportai.reportaiserver.exception.CustomException;
+import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
@@ -27,6 +29,9 @@ public class ImagemService {
 
    @Autowired
    private ImagemRepository repository;
+
+   @Autowired
+   private RegistroService registroService;
 
    @Value("${gcs.bucket-name}")
    private String bucketName;
@@ -63,7 +68,19 @@ public class ImagemService {
       return repository.findAll();
    }
 
-   public void deleteById(Long id) {
+   public void deleteById(Long id, Usuario usuario) {
+
+      Imagem imagem = findById(id);
+      if (!imagem.getRegistro().getUsuario().getId().equals(usuario.getId())) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+
+      try {
+         deleteFromGCS(imagem.getCaminho());
+      } catch (Exception e) {
+         throw new CustomException(ErrorDictionary.ERRO_GCS);
+      }
+
       repository.deleteById(id);
    }
 
@@ -84,7 +101,7 @@ public class ImagemService {
 
       byte[] compressedImage = outputStream.toByteArray();
 
-      String fileName = "registros/" + idRegistro + "/" + UUID.randomUUID().toString();
+      String fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID().toString();
       BlobId blobId = BlobId.of(bucketName, fileName);
       BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
               .setContentType(file.getContentType())
@@ -92,6 +109,16 @@ public class ImagemService {
 
       storage.create(blobInfo, compressedImage);
       return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
+   }
+
+   public void deleteFromGCS(String url) throws IOException {
+      String fileName = url.substring(url.indexOf("registros/"));
+      Storage storage = StorageOptions
+              .newBuilder()
+              .setCredentials(GoogleCredentials.fromStream(new FileInputStream(googleApplicationCredentials)))
+              .setProjectId("reportai-453222").build().getService();
+      BlobId blobId = BlobId.of(bucketName, fileName);
+      storage.delete(blobId);
    }
 
 }
