@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.CONCLUIDO;
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.IRRELEVANTE;
+import static com.reportai.reportaiserver.model.Usuario.Roles.ADMIN;
+import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
 
 @Component
 public class StartSeeder implements CommandLineRunner {
@@ -125,11 +127,11 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         usuarioRepository.save(Usuario.builder().role("ADMIN").nome("User").email("Admin").senha("123456").cpf("111111").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role("USER").nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("User").email("Admin").senha("123456").cpf("111111").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
       }
    }
 

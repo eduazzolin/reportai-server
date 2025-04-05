@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
+
 @Service
 public class UsuarioService {
 
@@ -25,7 +27,7 @@ public class UsuarioService {
 
    public Usuario save(Usuario usuario) {
       validacoes.validarUsuario(usuario);
-      usuario.setRole("USER");
+      usuario.setRole(USUARIO);
       if (usuario.getId() != null) {
          usuario.setCpf(repository.findById(usuario.getId()).get().getCpf());
       }
@@ -57,6 +59,14 @@ public class UsuarioService {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
       }
       return UsuarioMapper.toDTO(usuario.get());
+   }
+
+   public Usuario findAtivosById(Long id) {
+      Optional<Usuario> usuario = repository.findByIdAndIsDeleted(id, false);
+      if (usuario.isEmpty()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+      return usuario.get();
    }
 
    public List<Usuario> findAll() {

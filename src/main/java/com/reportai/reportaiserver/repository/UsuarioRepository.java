@@ -10,4 +10,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
    Optional<Usuario> findByCpf(String cpf);
 
+   Optional<Usuario> findByIdAndIsDeleted(Long id, boolean b);
 }
