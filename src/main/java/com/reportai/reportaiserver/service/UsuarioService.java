@@ -63,6 +63,14 @@ public class UsuarioService {
       return UsuarioMapper.toDTO(usuario.get());
    }
 
+   public Usuario findById(Long id) {
+      Optional<Usuario> usuario = repository.findById(id);
+      if (usuario.isEmpty()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+      return usuario.get();
+   }
+
    public Usuario findAtivosById(Long id) {
       Optional<Usuario> usuario = repository.findByIdAndIsDeleted(id, false);
       if (usuario.isEmpty()) {

@@ -31,6 +31,15 @@ public class UsuarioController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
+      if (usuario.getId() != null) {
+         Usuario usuarioExistente = service.findById(usuario.getId());
+         usuarioExistente.setNome(usuario.getNome());
+         usuarioExistente.setEmail(usuario.getEmail());
+         if (usuario.getSenha() != null) {
+            usuarioExistente.setSenha(usuario.getSenha());
+         }
+         usuario = usuarioExistente;
+      }
       Usuario usuarioSalvo = service.save(usuario);
       return ResponseEntity.ok(usuarioSalvo);
    }
@@ -67,7 +76,7 @@ public class UsuarioController {
            @RequestParam int pagina,
            @RequestParam int limite,
            @RequestParam String termo) {
-      Usuario usuario = usuarioService.findAtivosById(1L); // #ToDo #SpringSecurity
+      Usuario usuario = usuarioService.findAtivosById(2L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);

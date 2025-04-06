@@ -125,11 +125,8 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         for (int i = 0; i < 20; i++) {
-            usuarioRepository.save(Usuario.builder().role(USUARIO).nome("User " + i).email("user" + i + "@example.com").senha("123456").cpf(Integer.toString(i)).isDeleted(false).build());
-         }
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("User").email("Admin").senha("123456").cpf("111111").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("ADM").email("edu@rdo.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("111111").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
