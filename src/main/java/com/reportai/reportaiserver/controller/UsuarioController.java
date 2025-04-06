@@ -63,14 +63,14 @@ public class UsuarioController {
 
 
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarTodos(@RequestParam int pagina, @RequestParam int limite) {
+   public ResponseEntity<?> buscarPorTermo(@RequestParam int pagina, @RequestParam int limite, @RequestParam String termo) {
       Usuario usuario = usuarioService.findAtivosById(1L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      UsuariosPaginadoDTO usuariosPaginadoDTO = service.findAtivos(pagina, limite);
+      UsuariosPaginadoDTO usuariosPaginadoDTO = service.findAtivosByTermo(pagina, limite, termo);
       return ResponseEntity.ok(usuariosPaginadoDTO);
    }
 

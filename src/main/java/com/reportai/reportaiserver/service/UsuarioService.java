@@ -10,10 +10,6 @@ import com.reportai.reportaiserver.repository.UsuarioRepository;
 import com.reportai.reportaiserver.utils.UsuarioUtils;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -75,13 +71,12 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuariosPaginadoDTO findAtivos(int pagina, int limite) {
-      Pageable pageable = PageRequest.of(pagina, limite, Sort.by("nome"));
-      Page<Usuario> resultado = repository.findByIsDeleted(false, pageable);
+   public UsuariosPaginadoDTO findAtivosByTermo(int pagina, int limite, String termo) {
 
-      List<Usuario> usuarios = resultado.getContent();
-      int totalPaginas = resultado.getTotalPages();
-      long totalUsuarios = resultado.getTotalElements();
+      int offset = (pagina - 1) * limite;
+      int totalUsuarios = repository.countAtivosByTermo(termo);
+      int totalPaginas = (int) Math.ceil((double) totalUsuarios / limite);
+      List<Usuario> usuarios = repository.searchAtivosByTermo(termo, offset, limite);
 
       List<UsuarioDTO> usuariosDTO = new ArrayList<>();
       for (Usuario usuario : usuarios) {

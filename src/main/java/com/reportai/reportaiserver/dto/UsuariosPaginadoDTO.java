@@ -15,6 +15,6 @@ public class UsuariosPaginadoDTO {
    private int pagina;
    private int limite;
    private int totalPaginas;
-   private Long totalUsuarios;
+   private int totalUsuarios;
    private List<UsuarioDTO> usuarios;
 }

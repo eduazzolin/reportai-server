@@ -14,6 +14,8 @@ public class UsuarioMapper {
       dto.setEmail(entity.getEmail());
       dto.setCpf(entity.getCpf());
       dto.setRole(entity.getRole());
+      dto.setDtCriacao(entity.getDtCriacao());
+      dto.setDtModificacao(entity.getDtModificacao());
       return dto;
 
    }

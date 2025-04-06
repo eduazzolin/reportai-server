@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,6 +18,8 @@ public class UsuarioDTO {
    private String nome;
    private String email;
    private String cpf;
+   private LocalDateTime dtCriacao;
+   private LocalDateTime dtModificacao;
    private Usuario.Roles role;
 
 }
