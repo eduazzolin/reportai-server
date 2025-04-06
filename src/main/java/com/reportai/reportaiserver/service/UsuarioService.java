@@ -73,9 +73,12 @@ public class UsuarioService {
 
    public UsuariosPaginadoDTO findAtivosByTermo(int pagina, int limite, String termo) {
 
-      int offset = (pagina - 1) * limite;
+      int offset = pagina * limite;
+      System.out.println("termo: " + termo + " offset: " + offset + " limite: " + limite + " pagina: " + pagina);
       int totalUsuarios = repository.countAtivosByTermo(termo);
       int totalPaginas = (int) Math.ceil((double) totalUsuarios / limite);
+
+
       List<Usuario> usuarios = repository.searchAtivosByTermo(termo, offset, limite);
 
       List<UsuarioDTO> usuariosDTO = new ArrayList<>();

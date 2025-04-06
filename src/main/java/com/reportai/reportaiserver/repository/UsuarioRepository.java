@@ -24,7 +24,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
              AND (
                LOWER(nome)  LIKE LOWER(CONCAT('%', :termo, '%')) OR 
                LOWER(cpf)   LIKE LOWER(CONCAT('%', :termo, '%')) OR 
-               LOWER(email) LIKE LOWER(CONCAT('%', :termo, '%'))
+               LOWER(email) LIKE LOWER(CONCAT('%', :termo, '%')) OR
+                          ID LIKE CONCAT('%', :termo, '%')
              )
            ORDER BY nome
             LIMIT :limite
@@ -44,7 +45,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
              AND (
                LOWER(nome)  LIKE LOWER(CONCAT('%', :termo, '%')) OR 
                LOWER(cpf)   LIKE LOWER(CONCAT('%', :termo, '%')) OR 
-               LOWER(email) LIKE LOWER(CONCAT('%', :termo, '%'))
+               LOWER(email) LIKE LOWER(CONCAT('%', :termo, '%')) OR
+                          ID LIKE CONCAT('%', :termo, '%')
              )
            """,
 

@@ -63,7 +63,10 @@ public class UsuarioController {
 
 
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarPorTermo(@RequestParam int pagina, @RequestParam int limite, @RequestParam String termo) {
+   public ResponseEntity<?> buscarPorTermo(
+           @RequestParam int pagina,
+           @RequestParam int limite,
+           @RequestParam String termo) {
       Usuario usuario = usuarioService.findAtivosById(1L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
