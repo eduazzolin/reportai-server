@@ -12,9 +12,7 @@ import java.util.List;
 
 public interface RegistroRepository extends JpaRepository<Registro, Long> {
 
-   @Query(value = """
-               CALL SP_REGISTROS_POR_DISTANCIA(:latitude, :longitude, :distancia, :limite, :filtro, :ordenacao)
-           """, nativeQuery = true)
+   @Query(value = "CALL SP_REGISTROS_POR_DISTANCIA(:latitude, :longitude, :distancia, :limite, :filtro, :ordenacao)", nativeQuery = true)
    List<Registro> findByDistance(
            @Param("latitude") double latitude,
            @Param("longitude") double longitude,

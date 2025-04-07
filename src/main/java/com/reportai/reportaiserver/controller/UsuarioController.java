@@ -75,14 +75,15 @@ public class UsuarioController {
    public ResponseEntity<?> buscarPorTermo(
            @RequestParam int pagina,
            @RequestParam int limite,
-           @RequestParam String termo) {
+           @RequestParam String termo,
+           @RequestParam String ordenacao) {
       Usuario usuario = usuarioService.findAtivosById(2L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      UsuariosPaginadoDTO usuariosPaginadoDTO = service.findAtivosByTermo(pagina, limite, termo);
+      UsuariosPaginadoDTO usuariosPaginadoDTO = service.findAtivosByTermo(pagina, limite, termo, ordenacao);
       return ResponseEntity.ok(usuariosPaginadoDTO);
    }
 

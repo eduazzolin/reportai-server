@@ -40,6 +40,7 @@ public class StartSeeder implements CommandLineRunner {
       createProcedureRegistroPorDistancia();
       loadImagem();
       loadInteracoes();
+      createProcedureAdminListarUsuarios();
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -106,6 +107,67 @@ public class StartSeeder implements CommandLineRunner {
               
               """);
       ;
+   }
+
+   private void createProcedureAdminListarUsuarios() {
+
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_USUARIOS;");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_USUARIOS_COUNT;");
+      jdbcTemplate.execute("""
+              /*
+               * listagem de usuários com paginação e pesquisa por termos
+               */
+              CREATE PROCEDURE SP_ADMIN_LISTAR_USUARIOS(
+                       IN p_termo VARCHAR(1000),
+                       IN p_offset INT,
+                       IN p_limite INT,
+                       IN p_ordenacao VARCHAR(255)
+                   )
+                   BEGIN
+                       SET @sql = CONCAT('
+                           SELECT u.id,
+                                  u.nome,
+                                  u.cpf,
+                                  u.dt_criacao AS dtCriacao,
+                                  u.dt_modificacao AS dtModificacao,
+                                  u.email AS email,
+                                  u.is_deleted AS isDeleted,
+                                  u.role,
+                                  COUNT(r.ID) AS totalRegistros
+                           FROM usuario u
+                           LEFT JOIN registro r ON r.usuario_id = u.ID
+                           WHERE NOT u.is_deleted
+                             AND (
+                               LOWER(u.nome) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
+                               LOWER(u.cpf) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
+                               LOWER(u.email) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
+                               u.ID LIKE CONCAT("%","', p_termo, '", "%")
+                             )
+                           GROUP BY u.id, u.cpf, u.dt_criacao, u.dt_modificacao, u.email, u.is_deleted, u.nome, u.role
+                           ORDER BY ', p_ordenacao, '
+                           LIMIT ', p_limite, ' OFFSET ', p_offset);
+              
+                       PREPARE stmt FROM @sql;
+                       EXECUTE stmt;
+                       DEALLOCATE PREPARE stmt;
+                   END;
+              """);
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_ADMIN_LISTAR_USUARIOS_COUNT(
+                  IN p_termo VARCHAR(1000)
+              )
+              BEGIN
+                  SELECT COUNT(*)
+                  FROM usuario
+                  WHERE NOT is_deleted
+                    AND (
+                      LOWER(nome) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
+                      LOWER(cpf) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
+                      LOWER(email) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
+                      ID LIKE CONCAT('%', p_termo, '%')
+                      );
+              END;
+              """);
    }
 
    private void loadCategoria() {

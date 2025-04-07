@@ -1,6 +1,7 @@
 package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.dto.UsuarioDTO;
+import com.reportai.reportaiserver.dto.UsuarioListagemAdminProjection;
 import com.reportai.reportaiserver.dto.UsuariosPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
@@ -79,20 +80,14 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuariosPaginadoDTO findAtivosByTermo(int pagina, int limite, String termo) {
+   public UsuariosPaginadoDTO findAtivosByTermo(int pagina, int limite, String termo, String ordenacao) {
 
       int offset = pagina * limite;
-      System.out.println("termo: " + termo + " offset: " + offset + " limite: " + limite + " pagina: " + pagina);
       int totalUsuarios = repository.countAtivosByTermo(termo);
       int totalPaginas = (int) Math.ceil((double) totalUsuarios / limite);
 
 
-      List<Usuario> usuarios = repository.searchAtivosByTermo(termo, offset, limite);
-
-      List<UsuarioDTO> usuariosDTO = new ArrayList<>();
-      for (Usuario usuario : usuarios) {
-         usuariosDTO.add(UsuarioMapper.toDTO(usuario));
-      }
+      List<UsuarioListagemAdminProjection> usuariosDTO = repository.searchAtivosByTermo(termo, offset, limite, ordenacao);
 
       return UsuariosPaginadoDTO.builder()
               .pagina(pagina)

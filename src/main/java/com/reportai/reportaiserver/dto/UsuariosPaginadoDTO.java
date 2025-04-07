@@ -16,5 +16,5 @@ public class UsuariosPaginadoDTO {
    private int limite;
    private int totalPaginas;
    private int totalUsuarios;
-   private List<UsuarioDTO> usuarios;
+   private List<UsuarioListagemAdminProjection> usuarios;
 }
