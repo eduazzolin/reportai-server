@@ -14,6 +14,7 @@ public class RegistroMapper {
       dto.setId(entity.getId());
       dto.setTitulo(entity.getTitulo());
       dto.setDescricao(entity.getDescricao());
+      dto.setBairro(entity.getBairro());
       dto.setLocalizacao(entity.getLocalizacao());
       dto.setLatitude(entity.getLatitude());
       dto.setLongitude(entity.getLongitude());

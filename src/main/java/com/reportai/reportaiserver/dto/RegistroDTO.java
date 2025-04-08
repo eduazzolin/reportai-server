@@ -20,6 +20,7 @@ public class RegistroDTO {
    private String titulo;
    private String descricao;
    private String localizacao;
+   private String bairro;
    private Double latitude;
    private Double longitude;
    private LocalDateTime dtCriacao;

@@ -26,6 +26,9 @@ public class Registro {
    @Column(nullable = false, length = 255)
    private String titulo;
 
+   @Column(nullable = false, length = 1024)
+   private String bairro;
+
    @Lob
    @Column(nullable = false, length = 3500)
    private String descricao;
