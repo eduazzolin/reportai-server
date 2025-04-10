@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuariosPaginadoDTO {
+public class UsuariosAdminPaginadoDTO {
    private int pagina;
    private int limite;
    private int totalPaginas;

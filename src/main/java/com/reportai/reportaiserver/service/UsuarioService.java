@@ -2,7 +2,7 @@ package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.dto.UsuarioDTO;
 import com.reportai.reportaiserver.dto.UsuarioListagemAdminProjection;
-import com.reportai.reportaiserver.dto.UsuariosPaginadoDTO;
+import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
@@ -13,7 +13,6 @@ import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,7 +79,7 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuariosPaginadoDTO findAtivosByTermo(int pagina, int limite, String termo, String ordenacao) {
+   public UsuariosAdminPaginadoDTO adminSearchByTerms(int pagina, int limite, String termo, String ordenacao) {
 
       int offset = pagina * limite;
       int totalUsuarios = repository.countAtivosByTermo(termo);
@@ -89,7 +88,7 @@ public class UsuarioService {
 
       List<UsuarioListagemAdminProjection> usuariosDTO = repository.searchAtivosByTermo(termo, offset, limite, ordenacao);
 
-      return UsuariosPaginadoDTO.builder()
+      return UsuariosAdminPaginadoDTO.builder()
               .pagina(pagina)
               .limite(limite)
               .totalPaginas(totalPaginas)

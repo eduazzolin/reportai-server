@@ -41,6 +41,7 @@ public class StartSeeder implements CommandLineRunner {
       loadImagem();
       loadInteracoes();
       createProcedureAdminListarUsuarios();
+      createProcedureAdminListarRegistros();
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -106,6 +107,142 @@ public class StartSeeder implements CommandLineRunner {
                                      END
               
               """);
+      ;
+   }
+
+   private void createProcedureAdminListarRegistros() {
+
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS;");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000), IN p_offset INT, IN p_limite INT, IN p_ordenacao VARCHAR(255))
+                                        BEGIN
+             
+                                            /*
+                                             * select base com os campos que serão retornados
+                                             */
+                                            SET @SELECT_BASE = CONCAT(
+                                                    ' SELECT r.id                                                      AS id,                ',
+                                                    '        r.titulo                                                  AS titulo,            ',
+                                                    '        r.usuario_id                                              AS usuarioId,         ',
+                                                    '        r.dt_criacao                                              AS dtCriacao,         ',
+                                                    '        r.dt_modificacao                                          AS dtModificacao,     ',
+                                                    '        r.dt_conclusao                                            AS dtConclusao,       ',
+                                                    '        c.nome                                                    AS categoria,         ',
+                                                    '        r.bairro                                                  AS bairro,            ',
+                                                    '        NULL                                                      AS dtAteConclusao,    ',
+                                                    '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,       ',
+                                                    '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,       ',
+                                                    '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante      ',
+                                                    ' FROM REGISTRO r                                                                        ',
+                                                    '          LEFT JOIN categoria c ON r.categoria_id = c.id                                ',
+                                                    '          LEFT JOIN interacao i ON i.id_registro = r.id                                 ');
+                                       
+                                            /*
+                                             * filtros simples
+                                             */
+                                            SET @FILTROS_BASE = CONCAT(
+                                                    ' WHERE not r.is_deleted AND (r.id LIKE LOWER(''%', p_id_nome, '%'') ',
+                                                    ' OR r.titulo LIKE LOWER(''%', p_id_nome, '%'') )',
+                                                    ' AND (r.usuario_id = ', p_id_usuario, ' OR ', p_id_usuario, ' = 0) ',
+                                                    ' AND (c.id = ', p_id_categoria, ' OR ', p_id_categoria, ' = 0) ',
+                                                    ' AND (r.bairro LIKE LOWER(''%', p_bairro, '%'') OR '', p_bairro,'' = '''') ');
+                                       
+                                            /*
+                                             * filtro de status que precisou ser separado por causa do tipo
+                                             */
+                                            SET @FILTRO_STATUS = CASE
+                                                                     WHEN p_status <> '' THEN
+                                                                         CASE
+                                                                             WHEN p_status = 'ATIVO' THEN ' AND (r.dt_conclusao IS NULL) '
+                                                                             WHEN p_status = 'CONCLUIDO' THEN ' AND (r.dt_conclusao IS NOT NULL) '
+                                                                             END
+                                                                     ELSE '' END;
+                                       
+                                       
+                                            /*
+                                             * ordenação e paginação
+                                             */
+                                            SET @MAIN_QUERY = CONCAT(
+                                                    @SELECT_BASE,
+                                                    @FILTROS_BASE,
+                                                    @FILTRO_STATUS,
+                                                    ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro ',
+                                                    ' ORDER BY ', p_ordenacao,
+                                                    ' LIMIT ', p_limite, ' OFFSET ', p_offset);
+                                       
+                                       
+                                            PREPARE stmt FROM @MAIN_QUERY;
+                                            EXECUTE stmt;
+                                            DEALLOCATE PREPARE stmt;
+                                        END
+             
+             """);
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS_COUNT;");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS_COUNT(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000))
+              BEGIN
+              
+                  /*
+                   * select base com os campos que serão retornados
+                   */
+                  SET @SELECT_BASE = CONCAT(
+                          ' SELECT COUNT(*) FROM (',
+                          ' SELECT r.id                                                      AS id,                ',
+                          '        r.titulo                                                  AS titulo,            ',
+                          '        r.usuario_id                                              AS usuarioId,         ',
+                          '        r.dt_criacao                                              AS dtCriacao,         ',
+                          '        r.dt_modificacao                                          AS dtModificacao,     ',
+                          '        r.dt_conclusao                                            AS dtConclusao,       ',
+                          '        c.nome                                                    AS categoria,         ',
+                          '        r.bairro                                                  AS bairro,            ',
+                          '        NULL                                                      AS dtAteConclusao,    ',
+                          '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,       ',
+                          '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,       ',
+                          '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante      ',
+                          ' FROM REGISTRO r                                                                        ',
+                          '          LEFT JOIN categoria c ON r.categoria_id = c.id                                ',
+                          '          LEFT JOIN interacao i ON i.id_registro = r.id                                 ');
+              
+                  /*
+                   * filtros simples
+                   */
+                  SET @FILTROS_BASE = CONCAT(
+                          ' WHERE not r.is_deleted AND (r.id LIKE LOWER(''%', p_id_nome, '%'') ',
+                          ' OR r.titulo LIKE LOWER(''%', p_id_nome, '%'') )',
+                          ' AND (r.usuario_id = ', p_id_usuario, ' OR ', p_id_usuario, ' = 0) ',
+                          ' AND (c.id = ', p_id_categoria, ' OR ', p_id_categoria, ' = 0) ',
+                          ' AND (r.bairro LIKE LOWER(''%', p_bairro, '%'') OR '', p_bairro,'' = '''') ');
+              
+                  /*
+                   * filtro de status que precisou ser separado por causa do tipo
+                   */
+                  SET @FILTRO_STATUS = CASE
+                                           WHEN p_status <> '' THEN
+                                               CASE
+                                                   WHEN p_status = 'ATIVO' THEN ' AND (r.dt_conclusao IS NULL) '
+                                                   WHEN p_status = 'CONCLUIDO' THEN ' AND (r.dt_conclusao IS NOT NULL) '
+                                                   END
+                                           ELSE '' END;
+              
+              
+                  /*
+                   * ordenação e paginação
+                   */
+                  SET @MAIN_QUERY = CONCAT(
+                          @SELECT_BASE,
+                          @FILTROS_BASE,
+                          @FILTRO_STATUS,
+                          ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro ',
+                          ' ) e');
+              
+              
+                  PREPARE stmt FROM @MAIN_QUERY;
+                  EXECUTE stmt;
+                  DEALLOCATE PREPARE stmt;
+              END;
+              
+              """);
+
       ;
    }
 

@@ -2,6 +2,8 @@ package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.dto.MeusRegistrosDTO;
 import com.reportai.reportaiserver.dto.RegistroDTO;
+import com.reportai.reportaiserver.dto.RegistroListagemAdminProjection;
+import com.reportai.reportaiserver.dto.RegistrosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
@@ -98,4 +100,23 @@ public class RegistroService {
       registro.setDtConclusao(LocalDateTime.now());
       repository.save(registro);
    }
+
+   public RegistrosAdminPaginadoDTO adminSearchByTerms(String pIdNome, Long idUsuario, Long idCategoria, String bairro, String status, int pagina, int limite, String ordenacao) {
+
+      int offset = pagina * limite;
+      int totalRegistros = repository.countAdminRegistros(pIdNome, idUsuario, idCategoria, bairro, status);
+      int totalPaginas = (int) Math.ceil((double) totalRegistros / limite);
+
+      List<RegistroListagemAdminProjection> registrosDTO = repository.searchAdminRegistros(pIdNome, idUsuario, idCategoria, bairro, status, offset, limite, ordenacao);
+
+      return RegistrosAdminPaginadoDTO.builder()
+              .pagina(pagina)
+              .limite(limite)
+              .totalPaginas(totalPaginas)
+              .totalRegistros(totalRegistros)
+              .registros(registrosDTO)
+              .build();
+
+   }
+
 }
