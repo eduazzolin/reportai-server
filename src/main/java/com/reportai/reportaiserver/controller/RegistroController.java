@@ -34,9 +34,9 @@ public class RegistroController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
-      Usuario usuario = new Usuario();
-      usuario.setId(2L); // #ToDo #SpringSecurity
-      registro.setUsuario(usuario);
+      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+
+      registro.setUsuario(usuarioRequisitante);
       Registro registroSalvo = service.save(registro);
       RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
       return ResponseEntity.ok(registroDTO);
@@ -44,10 +44,14 @@ public class RegistroController {
 
    @PutMapping("/{id}/concluir")
    public ResponseEntity<?> concluir(@PathVariable Long id) {
-      Usuario usuario = new Usuario();
-      usuario.setId(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+      Registro registro = service.findById(id);
 
-      service.ConcluirById(id, usuario);
+      if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+
+      service.ConcluirById(registro);
       return ResponseEntity.ok().build();
    }
 
@@ -74,10 +78,9 @@ public class RegistroController {
 
    @GetMapping("/meus-registros")
    public ResponseEntity<?> listarMeusRegistros(@RequestParam int pagina, @RequestParam int limite) {
-      Usuario usuario = new Usuario();
-      usuario.setId(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
 
-      MeusRegistrosDTO meusRegistrosDTO = service.listarMeusRegistros(usuario, pagina, limite);
+      MeusRegistrosDTO meusRegistrosDTO = service.listarMeusRegistros(usuarioRequisitante, pagina, limite);
 
       return ResponseEntity.ok(meusRegistrosDTO);
    }
@@ -96,10 +99,14 @@ public class RegistroController {
 
    @DeleteMapping("/{id}")
    public ResponseEntity<?> excluir(@PathVariable Long id) {
-      Usuario usuario = new Usuario();
-      usuario.setId(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+      Registro registro = service.findById(id);
 
-      service.deleteById(id, usuario);
+      if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+      
+      service.deleteById(registro);
       return ResponseEntity.ok().build();
    }
 
@@ -115,13 +122,21 @@ public class RegistroController {
            @RequestParam(defaultValue = "dtCriacao") String ordenacao) {
 
 
-      Usuario usuario = usuarioService.findAtivosById(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
 
-      if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
+      if (!(usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.adminSearchByTerms(idNome, idUsuario, idCategoria, bairro, status, pagina, limite, ordenacao);
+      RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.adminSearchByTerms(
+              idNome,
+              idUsuario,
+              idCategoria,
+              bairro,
+              status,
+              pagina,
+              limite,
+              ordenacao);
 
 
       return ResponseEntity.ok(registrosAdminPaginadoDTO);

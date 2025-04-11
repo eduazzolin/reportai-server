@@ -27,7 +27,16 @@ public class UsuarioController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
+
+      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+
       if (usuario.getId() != null) {
+
+         if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+            throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+         }
+
+
          Usuario usuarioExistente = service.findById(usuario.getId());
          usuarioExistente.setNome(usuario.getNome());
          usuarioExistente.setEmail(usuario.getEmail());

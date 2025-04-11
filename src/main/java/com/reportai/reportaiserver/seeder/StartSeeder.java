@@ -111,7 +111,7 @@ public class StartSeeder implements CommandLineRunner {
    }
 
    private void createProcedureAdminListarRegistros() {
-
+      // #ToDo: dtAteConclusao
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS;");
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000), IN p_offset INT, IN p_limite INT, IN p_ordenacao VARCHAR(255))
@@ -324,11 +324,11 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("ADM").email("edu@rdo.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("111111").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("ADM").email("edu@rdo.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("160.410.930-09").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("João Silva").email("joao@silva.com").senha("123456").cpf("839.925.170-47").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("532.162.220-55").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("540.924.870-88").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("745.704.400-02").isDeleted(false).build());
       }
    }
 

@@ -54,13 +54,7 @@ public class RegistroService {
       return repository.findAll();
    }
 
-   public void deleteById(Long id, Usuario usuario) {
-      Registro registro = findById(id);
-
-      if (!registro.getUsuario().getId().equals(usuario.getId())) {
-         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
-      }
-
+   public void deleteById(Registro registro) {
       registro.setIsDeleted(true);
       registro.setDtExclusao(LocalDateTime.now());
       repository.save(registro);
@@ -89,13 +83,7 @@ public class RegistroService {
               .build();
    }
 
-   public void ConcluirById(Long id, Usuario usuario) {
-      Registro registro = findById(id);
-
-      if (!registro.getUsuario().getId().equals(usuario.getId())) {
-         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
-      }
-
+   public void ConcluirById(Registro registro) {
       registro.setIsConcluido(true);
       registro.setDtConclusao(LocalDateTime.now());
       repository.save(registro);
