@@ -21,7 +21,7 @@ public class OpenAIController {
    @PostMapping("/correcao")
    public ResponseEntity<OpenAIResponseCorrecaoDTO> validarTexto(@RequestBody String texto) {
       // #ToDo #SpringSecurity
-      OpenAIResponseCorrecaoDTO responseDTO = service.getChatCompletion(texto);
+      OpenAIResponseCorrecaoDTO responseDTO = service.executarPromptUsuario(texto);
       return ResponseEntity.ok(responseDTO);
    }
 

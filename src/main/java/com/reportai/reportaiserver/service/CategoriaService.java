@@ -13,19 +13,19 @@ public class CategoriaService {
    @Autowired
    private CategoriaRepository repository;
 
-   public Categoria save(Categoria categoria) {
+   public Categoria salvar(Categoria categoria) {
       return repository.save(categoria);
    }
 
-   public Categoria findById(Long id) {
+   public Categoria buscarPorId(Long id) {
       return repository.findById(id).orElse(null);
    }
 
-   public List<Categoria> findAll() {
+   public List<Categoria> buscarTodos() {
       return repository.findAll();
    }
 
-   public void deleteById(Long id) {
+   public void removerPorId(Long id) {
       repository.deleteById(id);
    }
 

@@ -28,7 +28,7 @@ public class UsuarioController {
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
 
-      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
 
       if (usuario.getId() != null) {
 
@@ -37,7 +37,7 @@ public class UsuarioController {
          }
 
 
-         Usuario usuarioExistente = service.findById(usuario.getId());
+         Usuario usuarioExistente = service.buscarPorId(usuario.getId());
          usuarioExistente.setNome(usuario.getNome());
          usuarioExistente.setEmail(usuario.getEmail());
          if (usuario.getSenha() != null) {
@@ -45,13 +45,13 @@ public class UsuarioController {
          }
          usuario = usuarioExistente;
       }
-      Usuario usuarioSalvo = service.save(usuario);
+      Usuario usuarioSalvo = service.salvar(usuario);
       return ResponseEntity.ok(usuarioSalvo);
    }
 
    @DeleteMapping("/{id}")
    public ResponseEntity<?> deletar(@PathVariable Long id) {
-      service.deleteById(id);
+      service.removerPorId(id);
       return ResponseEntity.ok().build();
    }
 
@@ -71,7 +71,7 @@ public class UsuarioController {
 
    @GetMapping("/{id}")
    public ResponseEntity<?> buscarDTOPorId(@PathVariable Long id) {
-      UsuarioDTO usuario = service.findDTOById(id);
+      UsuarioDTO usuario = service.buscarDTOPorId(id);
       return ResponseEntity.ok(usuario);
    }
 
@@ -83,13 +83,13 @@ public class UsuarioController {
            @RequestParam String termo,
            @RequestParam String ordenacao) {
 
-      Usuario usuario = usuarioService.findAtivosById(2L); // #ToDo #SpringSecurity
+      Usuario usuario = usuarioService.buscarAtivosPorId(2L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.adminSearchByTerms(pagina, limite, termo, ordenacao);
+      UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, ordenacao);
       return ResponseEntity.ok(usuariosAdminPaginadoDTO);
    }
 

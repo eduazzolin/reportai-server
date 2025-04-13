@@ -27,17 +27,17 @@ public class InteracaoController {
    private RegistroService registroService;
 
    @GetMapping("/relevantes/{idRegistro}")
-   public ResponseEntity<?> buscarRelevantes(@PathVariable Long idRegistro) {
-      Registro registro = registroService.findById(idRegistro);
-      return ResponseEntity.ok(service.findByRegistroAndTipo(registro, RELEVANTE));
+   public ResponseEntity<?> buscarInteracoesRelevante(@PathVariable Long idRegistro) {
+      Registro registro = registroService.buscarPorId(idRegistro);
+      return ResponseEntity.ok(service.BuscarDTOsPorRegistroETipo(registro, RELEVANTE));
    }
 
    @GetMapping("/{idRegistro}")
-   public ResponseEntity<?> buscarPorRegistroSimples(@PathVariable Long idRegistro) {
+   public ResponseEntity<?> buscarInteracaoRegistroSimplesDTOPorIdRegistro(@PathVariable Long idRegistro) {
       Usuario usuario = new Usuario();
       usuario.setId(2L); // #ToDo #SpringSecurity
-      Registro registro = registroService.findById(idRegistro);
-      InteracaoRegistroSimplesDTO interacaoRegistroSimplesDTO = service.findByRegistroSimples(registro, usuario);
+      Registro registro = registroService.buscarPorId(idRegistro);
+      InteracaoRegistroSimplesDTO interacaoRegistroSimplesDTO = service.buscarDTORegistroSimplesPorRegistroEUsuario(registro, usuario);
       return ResponseEntity.ok(interacaoRegistroSimplesDTO);
    }
 
@@ -46,18 +46,18 @@ public class InteracaoController {
       Usuario usuario = new Usuario();
       usuario.setId(2L); // #ToDo #SpringSecurity
       interacao.setUsuario(usuario);
-      return ResponseEntity.ok(service.save(interacao));
+      return ResponseEntity.ok(service.salvar(interacao));
    }
 
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> excluir(@PathVariable Long id) {
+   public ResponseEntity<?> remover(@PathVariable Long id) {
       Usuario usuario = new Usuario();
       usuario.setId(2L); // #ToDo #SpringSecurity
-      Interacao interacao = service.findById(id);
+      Interacao interacao = service.buscarPorId(id);
       if (interacao.getUsuario().getId() != usuario.getId()) {
          throw new CustomException(SEM_PERMISSAO);
       }
-      service.delete(interacao);
+      service.remover(interacao);
       return ResponseEntity.ok().build();
    }
 

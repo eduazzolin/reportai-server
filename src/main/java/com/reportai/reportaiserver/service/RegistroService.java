@@ -32,12 +32,12 @@ public class RegistroService {
    @Autowired
    private Validacoes validacoes;
 
-   public Registro save(Registro registro) {
+   public Registro salvar(Registro registro) {
       validacoes.validarRegistro(registro);
       return repository.save(registro);
    }
 
-   public Registro findById(Long id) {
+   public Registro buscarPorId(Long id) {
       Optional<Registro> registro = repository.findById(id);
       if (registro.isEmpty()) {
          throw new CustomException(ErrorDictionary.REGISTRO_NAO_ENCONTRADO);
@@ -46,21 +46,21 @@ public class RegistroService {
    }
 
 
-   public List<Registro> findByDistancia(double latitude, double longitude, double distancia, int limite, String filtro, String ordenacao) {
+   public List<Registro> buscarPorDistancia(double latitude, double longitude, double distancia, int limite, String filtro, String ordenacao) {
       return repository.findByDistance(latitude, longitude, distancia, limite, filtro, ordenacao);
    }
 
-   public List<Registro> findAll() {
+   public List<Registro> buscarTodos() {
       return repository.findAll();
    }
 
-   public void deleteById(Registro registro) {
+   public void removerPorId(Registro registro) {
       registro.setIsDeleted(true);
       registro.setDtExclusao(LocalDateTime.now());
       repository.save(registro);
    }
 
-   public MeusRegistrosDTO listarMeusRegistros(Usuario usuario, int pagina, int limite) {
+   public MeusRegistrosDTO buscarMeusRegistrosDTOPorUsuario(Usuario usuario, int pagina, int limite) {
 
       Pageable pageable = PageRequest.of(pagina, limite, Sort.by("isConcluido").and(Sort.by("dtCriacao").descending()));
       Page<Registro> resultado = repository.findByUsuarioAndIsDeleted(usuario, false, pageable);
@@ -83,13 +83,13 @@ public class RegistroService {
               .build();
    }
 
-   public void ConcluirById(Registro registro) {
+   public void concluirPorId(Registro registro) {
       registro.setIsConcluido(true);
       registro.setDtConclusao(LocalDateTime.now());
       repository.save(registro);
    }
 
-   public RegistrosAdminPaginadoDTO adminSearchByTerms(String pIdNome, Long idUsuario, Long idCategoria, String bairro, String status, int pagina, int limite, String ordenacao) {
+   public RegistrosAdminPaginadoDTO buscarRegistrosAdminpaginadoDTOPorTermos(String pIdNome, Long idUsuario, Long idCategoria, String bairro, String status, int pagina, int limite, String ordenacao) {
 
       int offset = pagina * limite;
       int totalRegistros = repository.countAdminRegistros(pIdNome, idUsuario, idCategoria, bairro, status);

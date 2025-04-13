@@ -23,30 +23,27 @@ public class InteracaoService {
    @Autowired
    private Validacoes validacoes;
 
-   public Interacao save(Interacao interacao) {
+   public Interacao salvar(Interacao interacao) {
       validacoes.validarInteracao(interacao);
       return repository.save(interacao);
    }
 
-   public Interacao findById(Long id) {
+   public Interacao buscarPorId(Long id) {
       return repository.findById(id).orElse(null);
    }
 
-   public Interacao findByIdAndUsuarioId(Long id, Long usuarioId) {
-      return repository.findByIdAndUsuarioId(id, usuarioId);
-   }
 
-   public List<Interacao> findAll() {
+   public List<Interacao> buscarTodos() {
       return repository.findAll();
    }
 
 
-   public void delete(Interacao interacao) {
+   public void remover(Interacao interacao) {
       interacao.setIsDeleted(true);
       repository.save(interacao);
    }
 
-   public List<InteracaoRelevanteDTO> findByRegistroAndTipo(Registro registro, Interacao.TipoInteracao tipoInteracao) {
+   public List<InteracaoRelevanteDTO> BuscarDTOsPorRegistroETipo(Registro registro, Interacao.TipoInteracao tipoInteracao) {
       List<Interacao> interacoes = repository.findByRegistroAndTipo(registro, tipoInteracao);
       List<InteracaoRelevanteDTO> dtos = new ArrayList<>();
 
@@ -57,7 +54,7 @@ public class InteracaoService {
       return dtos;
    }
 
-   public InteracaoRegistroSimplesDTO findByRegistroSimples(Registro registro, Usuario usuario) {
+   public InteracaoRegistroSimplesDTO buscarDTORegistroSimplesPorRegistroEUsuario(Registro registro, Usuario usuario) {
       InteracaoRegistroSimplesDTO dto = new InteracaoRegistroSimplesDTO();
       dto.setIdRegistro(registro.getId());
       dto.setIdUsuario(usuario.getId());

@@ -34,30 +34,30 @@ public class RegistroController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
-      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
 
       registro.setUsuario(usuarioRequisitante);
-      Registro registroSalvo = service.save(registro);
+      Registro registroSalvo = service.salvar(registro);
       RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
       return ResponseEntity.ok(registroDTO);
    }
 
    @PutMapping("/{id}/concluir")
    public ResponseEntity<?> concluir(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
-      Registro registro = service.findById(id);
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+      Registro registro = service.buscarPorId(id);
 
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      service.ConcluirById(registro);
+      service.concluirPorId(registro);
       return ResponseEntity.ok().build();
    }
 
 
    @GetMapping("/distancia")
-   public ResponseEntity<?> listarPorDistancia(
+   public ResponseEntity<?> buscarPorDistancia(
            @RequestParam double latitude,
            @RequestParam double longitude,
            @RequestParam double distancia,
@@ -65,7 +65,7 @@ public class RegistroController {
            @RequestParam String ordenacao) {
       int limite = 100;
 
-      List<Registro> registros = service.findByDistancia(latitude, longitude, distancia, limite, filtro, ordenacao);
+      List<Registro> registros = service.buscarPorDistancia(latitude, longitude, distancia, limite, filtro, ordenacao);
       ArrayList<RegistroDTO> registrosDTO = new ArrayList<>();
 
       for (Registro registro : registros) {
@@ -77,41 +77,41 @@ public class RegistroController {
    }
 
    @GetMapping("/meus-registros")
-   public ResponseEntity<?> listarMeusRegistros(@RequestParam int pagina, @RequestParam int limite) {
-      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> buscarMeusRegistrosDTO(@RequestParam int pagina, @RequestParam int limite) {
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
 
-      MeusRegistrosDTO meusRegistrosDTO = service.listarMeusRegistros(usuarioRequisitante, pagina, limite);
+      MeusRegistrosDTO meusRegistrosDTO = service.buscarMeusRegistrosDTOPorUsuario(usuarioRequisitante, pagina, limite);
 
       return ResponseEntity.ok(meusRegistrosDTO);
    }
 
    @GetMapping("/{id}")
    public RegistroDTO buscarDTOPorId(@PathVariable Long id) {
-      Registro registro = service.findById(id);
+      Registro registro = service.buscarPorId(id);
       return RegistroMapper.toDTO(registro);
    }
 
    @GetMapping("/dev/{id}")
    public ResponseEntity<Registro> buscarPorId(@PathVariable Long id) {
-      Registro registro = service.findById(id);
+      Registro registro = service.buscarPorId(id);
       return ResponseEntity.ok(registro);
    }
 
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> excluir(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
-      Registro registro = service.findById(id);
+   public ResponseEntity<?> remover(@PathVariable Long id) {
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+      Registro registro = service.buscarPorId(id);
 
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
       
-      service.deleteById(registro);
+      service.removerPorId(registro);
       return ResponseEntity.ok().build();
    }
 
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarPorTermo(
+   public ResponseEntity<?> buscarRegistrosAdminPaginadoDTOPorTermo(
            @RequestParam(defaultValue = "") String idNome,
            @RequestParam(defaultValue = "0") Long idUsuario,
            @RequestParam(defaultValue = "0") Long idCategoria,
@@ -122,13 +122,13 @@ public class RegistroController {
            @RequestParam(defaultValue = "dtCriacao") String ordenacao) {
 
 
-      Usuario usuarioRequisitante = usuarioService.findById(2L); // #ToDo #SpringSecurity
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
 
       if (!(usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.adminSearchByTerms(
+      RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.buscarRegistrosAdminpaginadoDTOPorTermos(
               idNome,
               idUsuario,
               idCategoria,

@@ -21,9 +21,9 @@ public class ImagemController {
 
 
    @GetMapping
-   public ResponseEntity<?> listar() {
+   public ResponseEntity<?> buscarTodos() {
       try {
-         return ResponseEntity.ok(service.findAll());
+         return ResponseEntity.ok(service.buscarTodos());
       } catch (Exception e) {
          return ResponseEntity.badRequest().body(e.getMessage());
       }
@@ -32,25 +32,25 @@ public class ImagemController {
    @GetMapping("/{id}")
    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
       try {
-         return ResponseEntity.ok(service.findById(id));
+         return ResponseEntity.ok(service.buscarPorId(id));
       } catch (Exception e) {
          return ResponseEntity.badRequest().body(e.getMessage());
       }
    }
 
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> excluir(@PathVariable Long id) {
+   public ResponseEntity<?> removerPorId(@PathVariable Long id) {
       Usuario usuario = new Usuario();
       usuario.setId(2L); // #ToDo #SpringSecurity
 
-      service.deleteById(id, usuario);
+      service.removerPorId(id, usuario);
       return ResponseEntity.ok().build();
    }
 
    @PostMapping
-   public ResponseEntity<Imagem> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("idRegistro") Long idRegistro) throws IOException {
+   public ResponseEntity<Imagem> salvar(@RequestParam("file") MultipartFile file, @RequestParam("idRegistro") Long idRegistro) throws IOException {
 
-      Imagem imagemSalva = service.save(file, idRegistro);
+      Imagem imagemSalva = service.salvar(file, idRegistro);
       return ResponseEntity.ok(imagemSalva);
 
    }

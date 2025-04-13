@@ -27,7 +27,7 @@ public class UsuarioService {
    @Autowired
    private Validacoes validacoes;
 
-   public Usuario save(Usuario usuario) {
+   public Usuario salvar(Usuario usuario) {
       validacoes.validarUsuario(usuario);
       usuario.setRole(USUARIO);
       if (usuario.getId() != null) {
@@ -55,7 +55,7 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuarioDTO findDTOById(Long id) {
+   public UsuarioDTO buscarDTOPorId(Long id) {
       Optional<Usuario> usuario = repository.findById(id);
       if (usuario.isEmpty()) {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
@@ -63,7 +63,7 @@ public class UsuarioService {
       return UsuarioMapper.toDTO(usuario.get());
    }
 
-   public Usuario findById(Long id) {
+   public Usuario buscarPorId(Long id) {
       Optional<Usuario> usuario = repository.findById(id);
       if (usuario.isEmpty()) {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
@@ -71,7 +71,7 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public Usuario findAtivosById(Long id) {
+   public Usuario buscarAtivosPorId(Long id) {
       Optional<Usuario> usuario = repository.findByIdAndIsDeleted(id, false);
       if (usuario.isEmpty()) {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
@@ -79,7 +79,7 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuariosAdminPaginadoDTO adminSearchByTerms(int pagina, int limite, String termo, String ordenacao) {
+   public UsuariosAdminPaginadoDTO buscarUsuariosAdminPaginadoDTOPorTermos(int pagina, int limite, String termo, String ordenacao) {
 
       int offset = pagina * limite;
       int totalUsuarios = repository.countAtivosByTermo(termo);
@@ -97,13 +97,9 @@ public class UsuarioService {
               .build();
    }
 
-   public void deleteById(Long id) {
-      Optional<Usuario> usuario = repository.findById(id);
-      if (usuario.isEmpty()) {
-         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
-      }
-
-      usuario.get().setIsDeleted(true);
-      repository.save(usuario.get());
+   public void removerPorId(Long id) {
+      Usuario usuario = buscarAtivosPorId(id);
+      usuario.setIsDeleted(true);
+      repository.save(usuario);
    }
 }
