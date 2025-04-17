@@ -32,11 +32,23 @@ public class RegistroService {
    @Autowired
    private Validacoes validacoes;
 
+   /**
+    * Salva um registro no banco de dados.
+    *
+    * @param registro
+    * @return registro com ID gerado
+    */
    public Registro salvar(Registro registro) {
       validacoes.validarRegistro(registro);
       return repository.save(registro);
    }
 
+   /**
+    * Busca um registro por ID.
+    *
+    * @param id
+    * @return registro encontrado
+    */
    public Registro buscarPorId(Long id) {
       Optional<Registro> registro = repository.findById(id);
       if (registro.isEmpty()) {
@@ -46,20 +58,50 @@ public class RegistroService {
    }
 
 
+   /**
+    * Busca registros por distância a partir de uma localização (latitude e longitude).
+    * Para mais informações, consulte a procedure SP_REGISTROS_POR_DISTANCIA.
+    *
+    * @param latitude
+    * @param longitude
+    * @param distancia
+    * @param limite
+    * @param filtro
+    * @param ordenacao
+    * @return lista de registros encontrados
+    */
    public List<Registro> buscarPorDistancia(double latitude, double longitude, double distancia, int limite, String filtro, String ordenacao) {
       return repository.findByDistance(latitude, longitude, distancia, limite, filtro, ordenacao);
    }
 
+   /**
+    * Busca todos os registros.
+    *
+    * @return lista de registros encontrados
+    */
    public List<Registro> buscarTodos() {
       return repository.findAll();
    }
 
-   public void removerPorId(Registro registro) {
+   /**
+    * Marca um registro como excluído.
+    *
+    * @param registro
+    */
+   public void remover(Registro registro) {
       registro.setIsDeleted(true);
       registro.setDtExclusao(LocalDateTime.now());
       repository.save(registro);
    }
 
+   /**
+    * Busca registros de um usuário específico, paginados.
+    *
+    * @param usuario
+    * @param pagina
+    * @param limite
+    * @return MeusRegistrosDTO com informações de paginação e lista de registros
+    */
    public MeusRegistrosDTO buscarMeusRegistrosDTOPorUsuario(Usuario usuario, int pagina, int limite) {
 
       Pageable pageable = PageRequest.of(pagina, limite, Sort.by("isConcluido").and(Sort.by("dtCriacao").descending()));
@@ -83,12 +125,31 @@ public class RegistroService {
               .build();
    }
 
+   /**
+    * Conclui um registro, marcando-o como concluído e definindo a data de conclusão.
+    *
+    * @param registro
+    */
    public void concluirPorId(Registro registro) {
       registro.setIsConcluido(true);
       registro.setDtConclusao(LocalDateTime.now());
       repository.save(registro);
    }
 
+   /**
+    * Busca registros de forma paginada para o admin, com base em diversos parâmetros de filtro.
+    * Para mais informações, consulte a procedure SP_ADMIN_LISTAR_REGISTROS.
+    *
+    * @param pIdNome
+    * @param idUsuario
+    * @param idCategoria
+    * @param bairro
+    * @param status
+    * @param pagina
+    * @param limite
+    * @param ordenacao
+    * @return RegistrosAdminPaginadoDTO
+    */
    public RegistrosAdminPaginadoDTO buscarRegistrosAdminpaginadoDTOPorTermos(String pIdNome, Long idUsuario, Long idCategoria, String bairro, String status, int pagina, int limite, String ordenacao) {
 
       int offset = pagina * limite;

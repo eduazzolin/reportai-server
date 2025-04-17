@@ -18,6 +18,13 @@ public class OpenAIController {
    @Autowired
    private OpenAIService service;
 
+   /**
+    * Executa o prompt de correção de texto do usuário.
+    * Para mais informações do prompt e do retorno, consute o prompt em src/main/resources/openai-prompt1-correcao-textual.md
+    *
+    * @param texto Texto a ser corrigido
+    * @return Resposta da IA com o texto corrigido em formato JSON
+    */
    @PostMapping("/correcao")
    public ResponseEntity<OpenAIResponseCorrecaoDTO> validarTexto(@RequestBody String texto) {
       // #ToDo #SpringSecurity

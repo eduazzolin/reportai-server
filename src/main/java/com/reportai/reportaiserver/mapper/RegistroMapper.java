@@ -40,11 +40,11 @@ public class RegistroMapper {
 
       if (entity.getInteracoes() != null) {
          for (Interacao interacao : entity.getInteracoes()) {
-            if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE)) {
+            if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE) && !interacao.getIsDeleted()) {
                interacoesRelevante++;
-            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.IRRELEVANTE)) {
+            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.IRRELEVANTE) && !interacao.getIsDeleted()) {
                interacoesIrrelevante++;
-            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
+            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO) && !interacao.getIsDeleted()) {
                interacoesConcluido++;
             }
          }

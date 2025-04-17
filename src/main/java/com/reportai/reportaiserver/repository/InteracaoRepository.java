@@ -13,9 +13,9 @@ public interface InteracaoRepository extends JpaRepository<Interacao, Long> {
 
    Interacao findByIdAndUsuarioId(Long id, Long usuarioId);
 
-   List<Interacao> findByRegistroAndTipo(Registro registro, Interacao.TipoInteracao tipoInteracao);
+   List<Interacao> findByRegistroAndTipoAndIsDeleted(Registro registro, Interacao.TipoInteracao tipoInteracao, boolean isDeleted);
 
-   Long countByRegistroAndTipo(Registro registro, Interacao.TipoInteracao tipoInteracao);
+   Long countByRegistroAndTipoAndIsDeleted(Registro registro, Interacao.TipoInteracao tipoInteracao, boolean isDeleted);
 
    Boolean existsByRegistroAndTipoAndUsuario(Registro registro, Interacao.TipoInteracao tipoInteracao, Usuario usuario);
 

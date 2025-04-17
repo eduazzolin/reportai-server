@@ -32,6 +32,12 @@ public class RegistroController {
    @Autowired
    private UsuarioService usuarioService;
 
+   /**
+    * Salva um registro no banco de dados.
+    *
+    * @param registro
+    * @return DTO do registro salvo
+    */
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
@@ -42,6 +48,12 @@ public class RegistroController {
       return ResponseEntity.ok(registroDTO);
    }
 
+   /**
+    * Marca um registro como concluído.
+    *
+    * @param id ID do registro a ser concluído
+    * @return Resposta HTTP 200 OK
+    */
    @PutMapping("/{id}/concluir")
    public ResponseEntity<?> concluir(@PathVariable Long id) {
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
@@ -56,6 +68,17 @@ public class RegistroController {
    }
 
 
+   /**
+    * Busca registros por distância a partir de uma localização (latitude e longitude).
+    * Para mais informações, consulte a procedure SP_REGISTROS_POR_DISTANCIA.
+    *
+    * @param latitude
+    * @param longitude
+    * @param distancia
+    * @param filtro
+    * @param ordenacao
+    * @return lista de registros encontrados em formato DTO
+    */
    @GetMapping("/distancia")
    public ResponseEntity<?> buscarPorDistancia(
            @RequestParam double latitude,
@@ -76,6 +99,13 @@ public class RegistroController {
       return ResponseEntity.ok(registrosDTO);
    }
 
+   /**
+    * Busca todos os registros do usuário logado.
+    *
+    * @param pagina
+    * @param limite
+    * @return meusRegistrosDTO
+    */
    @GetMapping("/meus-registros")
    public ResponseEntity<?> buscarMeusRegistrosDTO(@RequestParam int pagina, @RequestParam int limite) {
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
@@ -85,18 +115,36 @@ public class RegistroController {
       return ResponseEntity.ok(meusRegistrosDTO);
    }
 
+   /**
+    * Busca o DTO do registro por ID.
+    *
+    * @param id ID do registro a ser buscado
+    * @return
+    */
    @GetMapping("/{id}")
    public RegistroDTO buscarDTOPorId(@PathVariable Long id) {
       Registro registro = service.buscarPorId(id);
       return RegistroMapper.toDTO(registro);
    }
 
+   /**
+    * Busca o registro por ID.
+    *
+    * @param id ID do registro a ser buscado
+    * @return
+    */
    @GetMapping("/dev/{id}")
    public ResponseEntity<Registro> buscarPorId(@PathVariable Long id) {
       Registro registro = service.buscarPorId(id);
       return ResponseEntity.ok(registro);
    }
 
+   /**
+    * Marca um registro como excluído.
+    *
+    * @param id ID do registro a ser excluído
+    * @return
+    */
    @DeleteMapping("/{id}")
    public ResponseEntity<?> remover(@PathVariable Long id) {
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
@@ -105,11 +153,25 @@ public class RegistroController {
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
-      
-      service.removerPorId(registro);
+
+      service.remover(registro);
       return ResponseEntity.ok().build();
    }
 
+   /**
+    * Busca os registros para a página de administração.
+    * Para mais informações, consulte a procedure SP_ADMIN_LISTAR_REGISTROS.
+    *
+    * @param idNome
+    * @param idUsuario
+    * @param idCategoria
+    * @param bairro
+    * @param status
+    * @param pagina
+    * @param limite
+    * @param ordenacao
+    * @return
+    */
    @GetMapping("/admin")
    public ResponseEntity<?> buscarRegistrosAdminPaginadoDTOPorTermo(
            @RequestParam(defaultValue = "") String idNome,

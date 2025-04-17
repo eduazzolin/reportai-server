@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InteracaoRelevanteDTO {
+public class InteracaoDTO {
 
    private Long id;
    private Interacao.TipoInteracao tipo;
