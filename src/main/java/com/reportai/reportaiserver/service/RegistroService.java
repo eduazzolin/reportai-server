@@ -8,6 +8,7 @@ import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.ConclusaoProgramada;
+import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.ConclusaoProgramadaRepository;
@@ -36,6 +37,9 @@ public class RegistroService {
 
    @Autowired
    private Validacoes validacoes;
+
+   @Autowired
+   private ImagemService imagemService;
 
    /**
     * Salva um registro no banco de dados.
@@ -97,6 +101,11 @@ public class RegistroService {
       registro.setIsDeleted(true);
       registro.setDtExclusao(LocalDateTime.now());
       repository.save(registro);
+
+      // Remover as imagens
+      for (Imagem imagem : registro.getImagens()) {
+         imagemService.remover(imagem);
+      }
    }
 
    /**
