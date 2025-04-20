@@ -66,6 +66,18 @@ public class RegistroController {
       return ResponseEntity.ok().build();
    }
 
+   @PutMapping("/{id}/remover-conclusao-programada")
+   public ResponseEntity<?> removerConclusaoProgramada(@PathVariable Long id) {
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+      Registro registro = service.buscarPorId(id);
+
+      if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+      service.removerConclusaoProgramada(registro);
+      return ResponseEntity.ok().build();
+   }
+
 
    /**
     * Busca registros por distância a partir de uma localização (latitude e longitude).

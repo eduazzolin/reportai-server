@@ -141,16 +141,25 @@ public class RegistroService {
     */
    public void concluirPorId(Registro registro) {
 
-      ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);
-      if (conclusaoProgramada != null) {
-         conclusaoProgramada.setRemovidaEm(LocalDateTime.now());
-         conclusaoProgramada = conclusaoProgramadaRepository.save(conclusaoProgramada);
-      }
+      removerConclusaoProgramada(registro);
 
       registro.setIsConcluido(true);
       registro.setDtConclusao(LocalDateTime.now());
       repository.save(registro);
 
+   }
+
+   /**
+    * Marca uma conclusão programada como removida, definindo a data de remoção.
+    *
+    * @param registro
+    */
+   public void removerConclusaoProgramada(Registro registro) {
+      ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);
+      if (conclusaoProgramada != null) {
+         conclusaoProgramada.setRemovidaEm(LocalDateTime.now());
+         conclusaoProgramadaRepository.save(conclusaoProgramada);
+      }
    }
 
    /**
