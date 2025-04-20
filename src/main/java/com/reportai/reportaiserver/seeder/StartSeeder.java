@@ -42,6 +42,53 @@ public class StartSeeder implements CommandLineRunner {
       loadInteracoes();
       createProcedureAdminListarUsuarios();
       createProcedureAdminListarRegistros();
+      createProcedureConclusaoAutomatica();
+   }
+
+   private void createProcedureConclusaoAutomatica() {
+
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_CONCLUSAO_AUTOMATICA");
+      jdbcTemplate.execute("""
+         CREATE PROCEDURE SP_CONCLUSAO_AUTOMATICA()
+         BEGIN
+         
+             /*
+              * tabela com os registros ativos enriquecida com:
+              * - data da última interação do tipo 'concluído'
+              * - flag se possui ou não agendamento
+              * - data do último removido_em da tabela de agendamentos
+              */
+             DROP TEMPORARY TABLE IF EXISTS REGISTROS_COM_CONCLUIDO;
+             CREATE TEMPORARY TABLE REGISTROS_COM_CONCLUIDO AS
+             SELECT R.ID                                                     AS id_registro,
+                    R.usuario_id                                             AS id_usuario,
+                    MAX(I.dt_criacao)                                        AS dt_ultimo_concluido,
+                    CASE WHEN MAX(C.id) IS NOT NULL THEN TRUE ELSE FALSE END AS fl_possui_agendamento,
+                    MAX(C.removida_em)                                       AS dt_ultimo_removido_em
+             FROM registro R
+                      JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT i.is_deleted
+                      LEFT JOIN conclusao_programada c ON c.id_registro = r.id
+             WHERE NOT R.is_concluido
+               AND NOT R.is_deleted
+             GROUP BY R.ID, R.usuario_id;
+         
+             /*
+              * insere os registros na tabela de conclusão programada se:
+              * O registro não existir na tabela de conclusão programada ou, caso exista,
+              * ele não deve estar com a data de remoção aberta e a data de remoção deve ser anterior
+              * à data da última interação.
+              */
+             INSERT INTO conclusao_programada (DT_CRIACAO, ID_REGISTRO, ID_USUARIO, REMOVIDA_EM, CONCLUSAO_PROGRAMADA_PARA)
+             SELECT CURRENT_TIMESTAMP                            AS dt_criacao,
+                    id_registro                                  AS id_registro,
+                    id_usuario                                   AS id_usuario,
+                    NULL                                         AS removida_em,
+                    DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY) AS conclusao_programada_para
+             FROM REGISTROS_COM_CONCLUIDO r
+             WHERE NOT fl_possui_agendamento OR dt_ultimo_concluido > dt_ultimo_removido_em;
+         
+         END;
+              """);
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -121,21 +168,22 @@ public class StartSeeder implements CommandLineRunner {
                                              * select base com os campos que serão retornados
                                              */
                                             SET @SELECT_BASE = CONCAT(
-                                                    ' SELECT r.id                                                      AS id,                ',
-                                                    '        r.titulo                                                  AS titulo,            ',
-                                                    '        r.usuario_id                                              AS usuarioId,         ',
-                                                    '        r.dt_criacao                                              AS dtCriacao,         ',
-                                                    '        r.dt_modificacao                                          AS dtModificacao,     ',
-                                                    '        r.dt_conclusao                                            AS dtConclusao,       ',
-                                                    '        c.nome                                                    AS categoria,         ',
-                                                    '        r.bairro                                                  AS bairro,            ',
-                                                    '        NULL                                                      AS dtAteConclusao,    ',
-                                                    '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,       ',
-                                                    '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,       ',
-                                                    '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante      ',
-                                                    ' FROM REGISTRO r                                                                        ',
-                                                    '          LEFT JOIN categoria c ON r.categoria_id = c.id                                ',
-                                                    '          LEFT JOIN interacao i ON i.id_registro = r.id                                 ');
+                                                    ' SELECT r.id                                                    AS id,                              ',
+                                                    '        r.titulo                                                AS titulo,                          ',
+                                                    '        r.usuario_id                                            AS usuarioId,                       ',
+                                                    '        r.dt_criacao                                            AS dtCriacao,                       ',
+                                                    '        r.dt_modificacao                                        AS dtModificacao,                   ',
+                                                    '        r.dt_conclusao                                          AS dtConclusao,                     ',
+                                                    '        c.nome                                                  AS categoria,                       ',
+                                                    '        r.bairro                                                AS bairro,                          ',
+                                                    '        cp.conclusao_programada_para                            AS dtAteConclusao,                  ',
+                                                    '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,                   ',
+                                                    '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,                   ',
+                                                    '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante                  ',
+                                                    ' FROM REGISTRO r                                                                                    ',
+                                                    '          LEFT JOIN categoria c ON r.categoria_id = c.id                                            ',
+                                                    '          LEFT JOIN interacao i ON i.id_registro = r.id                                             ',
+                                                    '          LEFT JOIN conclusao_programada cp ON r.id = cp.id_registro AND cp.removida_em IS NULL     ');
                                        
                                             /*
                                              * filtros simples
@@ -166,7 +214,7 @@ public class StartSeeder implements CommandLineRunner {
                                                     @SELECT_BASE,
                                                     @FILTROS_BASE,
                                                     @FILTRO_STATUS,
-                                                    ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro ',
+                                                    ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro, cp.conclusao_programada_para ',
                                                     ' ORDER BY ', p_ordenacao,
                                                     ' LIMIT ', p_limite, ' OFFSET ', p_offset);
                                        

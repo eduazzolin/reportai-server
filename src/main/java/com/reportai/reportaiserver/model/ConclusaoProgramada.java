@@ -32,15 +32,18 @@ public class ConclusaoProgramada {
 
    @ManyToOne
    @JoinColumn(name = "id_registro", nullable = false)
-   @JsonBackReference
+   @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+   @JsonIdentityReference(alwaysAsId = true)
    private Registro registro;
 
    @CreationTimestamp
-   @Column(updatable = false)
+   @Column()
    private LocalDateTime dtCriacao;
 
-   @CreationTimestamp
-   @Column(updatable = false)
+   @Column()
    private LocalDateTime removidaEm;
+
+   @Column()
+   private LocalDateTime conclusaoProgramadaPara;
 
 }

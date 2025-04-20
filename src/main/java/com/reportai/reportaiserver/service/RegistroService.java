@@ -7,8 +7,10 @@ import com.reportai.reportaiserver.dto.RegistrosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
+import com.reportai.reportaiserver.model.ConclusaoProgramada;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
+import com.reportai.reportaiserver.repository.ConclusaoProgramadaRepository;
 import com.reportai.reportaiserver.repository.RegistroRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class RegistroService {
 
    @Autowired
    private RegistroRepository repository;
+
+   @Autowired
+   private ConclusaoProgramadaRepository conclusaoProgramadaRepository;
 
    @Autowired
    private Validacoes validacoes;
@@ -113,7 +118,9 @@ public class RegistroService {
 
       List<RegistroDTO> registrosDTO = new ArrayList<>();
       for (Registro registro : registros) {
-         registrosDTO.add(RegistroMapper.toDTO(registro));
+         RegistroDTO registroDTO = RegistroMapper.toDTO(registro);
+         registroDTO.setDtConclusaoProgramada(buscarDtConclusaoProgramadaPorId(registro.getId()));
+         registrosDTO.add(registroDTO);
       }
 
       return MeusRegistrosDTO.builder()
@@ -127,13 +134,23 @@ public class RegistroService {
 
    /**
     * Conclui um registro, marcando-o como concluído e definindo a data de conclusão.
+    * Se houver uma conclusão programada associada, ela será removida.
     *
     * @param registro
+    * @return
     */
    public void concluirPorId(Registro registro) {
+
+      ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);
+      if (conclusaoProgramada != null) {
+         conclusaoProgramada.setRemovidaEm(LocalDateTime.now());
+         conclusaoProgramada = conclusaoProgramadaRepository.save(conclusaoProgramada);
+      }
+
       registro.setIsConcluido(true);
       registro.setDtConclusao(LocalDateTime.now());
       repository.save(registro);
+
    }
 
    /**
@@ -158,6 +175,7 @@ public class RegistroService {
 
       List<RegistroListagemAdminProjection> registrosDTO = repository.searchAdminRegistros(pIdNome, idUsuario, idCategoria, bairro, status, offset, limite, ordenacao);
 
+
       return RegistrosAdminPaginadoDTO.builder()
               .pagina(pagina)
               .limite(limite)
@@ -166,6 +184,16 @@ public class RegistroService {
               .registros(registrosDTO)
               .build();
 
+   }
+
+   public LocalDateTime buscarDtConclusaoProgramadaPorId(Long id) {
+      Registro registro = buscarPorId(id);
+      ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);
+      if (conclusaoProgramada == null) {
+         return null;
+      } else {
+         return conclusaoProgramada.getConclusaoProgramadaPara();
+      }
    }
 
 }

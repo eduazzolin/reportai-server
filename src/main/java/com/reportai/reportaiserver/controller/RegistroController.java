@@ -62,7 +62,6 @@ public class RegistroController {
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
-
       service.concluirPorId(registro);
       return ResponseEntity.ok().build();
    }

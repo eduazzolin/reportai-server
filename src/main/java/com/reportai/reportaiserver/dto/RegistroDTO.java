@@ -40,4 +40,6 @@ public class RegistroDTO {
    private Integer interacoesIrrelevante;
    private Integer interacoesConcluido;
 
+   private LocalDateTime dtConclusaoProgramada;
+
 }

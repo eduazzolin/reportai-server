@@ -62,7 +62,7 @@ public class OpenAIService {
 
          // Corpo da requisição
          Map<String, Object> requestBody = new HashMap<>();
-         requestBody.put("model", "gpt-4o-mini");
+         requestBody.put("model", "gpt-4o");
          requestBody.put("messages", List.of(
                  Map.of("role", "system", "content", buscarPromptSistema()),
                  Map.of("role", "user", "content", userMessage)
