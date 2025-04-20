@@ -382,37 +382,37 @@ public class StartSeeder implements CommandLineRunner {
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_CATEGORIA");
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_STATUS");
       jdbcTemplate.execute("""
-              CREATE PROCEDURE SP_RELATORIO_BAIRRO(IN p_data_inicio DATETIME)
+              CREATE PROCEDURE SP_RELATORIO_BAIRRO(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
                   SELECT BAIRRO, COUNT(*) AS QUANTIDADE
                   FROM REGISTRO
                   WHERE NOT IS_DELETED
                     AND NOT IS_CONCLUIDO
-                    AND DT_CRIACAO >= p_data_inicio
+                    AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY BAIRRO
                   ORDER BY QUANTIDADE DESC;
               END;
               """);
       jdbcTemplate.execute("""
-              CREATE PROCEDURE SP_RELATORIO_CATEGORIA(IN p_data_inicio DATETIME)
+              CREATE PROCEDURE SP_RELATORIO_CATEGORIA(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
                   SELECT C.NOME AS CATEGORIA, COUNT(*) QUANTIDADE
                   FROM REGISTRO R
                            LEFT JOIN CATEGORIA C ON C.ID = R.categoria_id
                   WHERE NOT R.IS_DELETED
                     AND NOT R.IS_CONCLUIDO
-                    AND R.DT_CRIACAO >= p_data_inicio
+                    AND  CAST(R.DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY C.NOME
                   ORDER BY QUANTIDADE DESC;
               END;
               """);
       jdbcTemplate.execute("""
-              CREATE PROCEDURE SP_RELATORIO_STATUS(IN p_data_inicio DATETIME)
+              CREATE PROCEDURE SP_RELATORIO_STATUS(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
                   SELECT CASE WHEN IS_CONCLUIDO THEN 'Concluído' ELSE 'Ativo' END AS STATUS, COUNT(*) QUANTIDADE
                   FROM REGISTRO
                   WHERE NOT IS_DELETED
-                    AND DT_CRIACAO >= p_data_inicio
+                    AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY IS_CONCLUIDO
                   ORDER BY QUANTIDADE DESC;
               END;

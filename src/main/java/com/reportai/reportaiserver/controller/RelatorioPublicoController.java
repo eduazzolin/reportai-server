@@ -23,22 +23,25 @@ public class RelatorioPublicoController {
 
    @GetMapping("/status")
    public ResponseEntity<List<RelatorioStatusProjection>> relatorioStatus(
-           @RequestParam(defaultValue = "1999-01-01") String dataInicio
+           @RequestParam(defaultValue = "1999-01-01") String dataInicio,
+           @RequestParam(defaultValue = "2999-01-01") String dataFim
    ) {
-       return ResponseEntity.ok(registroRepository.generateRelatorioStatus(dataInicio));
+      return ResponseEntity.ok(registroRepository.generateRelatorioStatus(dataInicio, dataFim));
    }
 
    @GetMapping("/bairro")
    public ResponseEntity<?> relatorioBairro(
-           @RequestParam(defaultValue = "1999-01-01") String dataInicio
+           @RequestParam(defaultValue = "1999-01-01") String dataInicio,
+           @RequestParam(defaultValue = "2999-01-01") String dataFim
    ) {
-       return ResponseEntity.ok(registroRepository.generateRelatorioBairro(dataInicio));
+      return ResponseEntity.ok(registroRepository.generateRelatorioBairro(dataInicio, dataFim));
    }
 
    @GetMapping("/categoria")
    public ResponseEntity<?> relatorioCategoria(
-           @RequestParam(defaultValue = "1999-01-01") String dataInicio
+           @RequestParam(defaultValue = "1999-01-01") String dataInicio,
+           @RequestParam(defaultValue = "2999-01-01") String dataFim
    ) {
-       return ResponseEntity.ok(registroRepository.generateRelatorioCategoria(dataInicio));
+      return ResponseEntity.ok(registroRepository.generateRelatorioCategoria(dataInicio, dataFim));
    }
 }

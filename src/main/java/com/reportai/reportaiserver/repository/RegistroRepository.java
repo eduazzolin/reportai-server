@@ -48,19 +48,22 @@ public interface RegistroRepository extends JpaRepository<Registro, Long> {
    );
 
 
-   @Query(value = "CALL SP_RELATORIO_BAIRRO(:p_data_inicio)", nativeQuery = true)
+   @Query(value = "CALL SP_RELATORIO_BAIRRO(:p_data_inicio, :p_data_fim)", nativeQuery = true)
    List<RelatorioBairroProjection> generateRelatorioBairro(
-           @Param("p_data_inicio") String dataInicio
+           @Param("p_data_inicio") String dataInicio,
+           @Param("p_data_fim") String dataFim
    );
 
-   @Query(value = "CALL SP_RELATORIO_CATEGORIA(:p_data_inicio)", nativeQuery = true)
+   @Query(value = "CALL SP_RELATORIO_CATEGORIA(:p_data_inicio, :p_data_fim)", nativeQuery = true)
    List<RelatorioCategoriaProjection> generateRelatorioCategoria(
-           @Param("p_data_inicio") String dataInicio
+           @Param("p_data_inicio") String dataInicio,
+           @Param("p_data_fim") String dataFim
    );
 
-   @Query(value = "CALL SP_RELATORIO_STATUS(:p_data_inicio)", nativeQuery = true)
+   @Query(value = "CALL SP_RELATORIO_STATUS(:p_data_inicio, :p_data_fim)", nativeQuery = true)
    List<RelatorioStatusProjection> generateRelatorioStatus(
-           @Param("p_data_inicio") String dataInicio
+           @Param("p_data_inicio") String dataInicio,
+           @Param("p_data_fim") String dataFim
    );
 
    Page<Registro> findByUsuarioAndIsDeleted(Usuario usuario, boolean isDeleted, Pageable pageable);

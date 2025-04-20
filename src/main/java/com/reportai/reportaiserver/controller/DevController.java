@@ -35,13 +35,4 @@ public class DevController {
       ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);
       return ResponseEntity.ok(conclusaoProgramada);
    }
-
-   @GetMapping("/relatorio-bairro")
-   public ResponseEntity<?> relatorioBairro(
-           @RequestParam(defaultValue = "1999-01-01") String dataInicio
-   ) {
-      return ResponseEntity.ok(registroRepository.generateRelatorioBairro(dataInicio));
-   }
-
-
 }
