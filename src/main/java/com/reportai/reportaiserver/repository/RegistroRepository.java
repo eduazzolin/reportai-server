@@ -1,6 +1,9 @@
 package com.reportai.reportaiserver.repository;
 
 import com.reportai.reportaiserver.dto.RegistroListagemAdminProjection;
+import com.reportai.reportaiserver.dto.RelatorioBairroProjection;
+import com.reportai.reportaiserver.dto.RelatorioCategoriaProjection;
+import com.reportai.reportaiserver.dto.RelatorioStatusProjection;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import org.springframework.data.domain.Page;
@@ -44,6 +47,21 @@ public interface RegistroRepository extends JpaRepository<Registro, Long> {
            @Param("status") String status
    );
 
+
+   @Query(value = "CALL SP_RELATORIO_BAIRRO(:p_data_inicio)", nativeQuery = true)
+   List<RelatorioBairroProjection> generateRelatorioBairro(
+           @Param("p_data_inicio") String dataInicio
+   );
+
+   @Query(value = "CALL SP_RELATORIO_CATEGORIA(:p_data_inicio)", nativeQuery = true)
+   List<RelatorioCategoriaProjection> generateRelatorioCategoria(
+           @Param("p_data_inicio") String dataInicio
+   );
+
+   @Query(value = "CALL SP_RELATORIO_STATUS(:p_data_inicio)", nativeQuery = true)
+   List<RelatorioStatusProjection> generateRelatorioStatus(
+           @Param("p_data_inicio") String dataInicio
+   );
 
    Page<Registro> findByUsuarioAndIsDeleted(Usuario usuario, boolean isDeleted, Pageable pageable);
 }

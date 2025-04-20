@@ -45,6 +45,7 @@ public class StartSeeder implements CommandLineRunner {
       createProcedureAdminListarUsuarios();
       createProcedureAdminListarRegistros();
       createProcedureConclusaoAutomatica();
+      createProceduresRelatorios();
       callProcedure("SP_CONCLUSAO_AUTOMATICA");
    }
 
@@ -56,61 +57,61 @@ public class StartSeeder implements CommandLineRunner {
 
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_CONCLUSAO_AUTOMATICA");
       jdbcTemplate.execute("""
-         CREATE PROCEDURE SP_CONCLUSAO_AUTOMATICA()
-         BEGIN
-         
-             /*
-              * tabela com os registros ativos enriquecida com:
-              * - data da última interação do tipo 'concluído'
-              * - flag se possui ou não agendamento
-              * - data do último removido_em da tabela de agendamentos
-              */
-             DROP TEMPORARY TABLE IF EXISTS REGISTROS_COM_CONCLUIDO;
-             CREATE TEMPORARY TABLE REGISTROS_COM_CONCLUIDO AS
-             SELECT R.ID                                                     AS id_registro,
-                    R.usuario_id                                             AS id_usuario,
-                    MAX(I.dt_criacao)                                        AS dt_ultimo_concluido,
-                    CASE WHEN MAX(C.id) IS NOT NULL THEN TRUE ELSE FALSE END AS fl_possui_agendamento,
-                    MAX(C.removida_em)                                       AS dt_ultimo_removido_em
-             FROM registro R
-                      JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT i.is_deleted
-                      LEFT JOIN conclusao_programada c ON c.id_registro = r.id
-             WHERE NOT R.is_concluido
-               AND NOT R.is_deleted
-             GROUP BY R.ID, R.usuario_id;
-         
-             /*
-              * insere os registros na tabela de conclusão programada se:
-              * O registro não existir na tabela de conclusão programada ou, caso exista,
-              * ele não deve estar com a data de remoção aberta e a data de remoção deve ser anterior
-              * à data da última interação.
-              */
-             INSERT INTO conclusao_programada (DT_CRIACAO, ID_REGISTRO, ID_USUARIO, REMOVIDA_EM, CONCLUSAO_PROGRAMADA_PARA)
-             SELECT CURRENT_TIMESTAMP                                AS dt_criacao,
-                    id_registro                                      AS id_registro,
-                    id_usuario                                       AS id_usuario,
-                    NULL                                             AS removida_em,
-                    DATE_ADD(dt_ultimo_concluido, INTERVAL 30 DAY)   AS conclusao_programada_para
-             FROM REGISTROS_COM_CONCLUIDO r
-             WHERE NOT fl_possui_agendamento OR dt_ultimo_concluido > dt_ultimo_removido_em;
-         
-             /*
-              * conclui os registros programados para remoção
-              * e sinaliza na tabela de conclusão programada que foram removidos
-              */
-             UPDATE registro
-             SET is_concluido = TRUE,
-                 dt_conclusao = CURRENT_TIMESTAMP
-             WHERE id IN
-                   (SELECT ID_REGISTRO FROM conclusao_programada WHERE conclusao_programada_para < CURRENT_TIMESTAMP AND removida_em IS NULL);
-         
-             UPDATE conclusao_programada
-             SET removida_em = CURRENT_TIMESTAMP
-             WHERE conclusao_programada_para < CURRENT_TIMESTAMP
-               AND removida_em IS NULL;
-         
-         END;
-         """);
+              CREATE PROCEDURE SP_CONCLUSAO_AUTOMATICA()
+              BEGIN
+              
+                  /*
+                   * tabela com os registros ativos enriquecida com:
+                   * - data da última interação do tipo 'concluído'
+                   * - flag se possui ou não agendamento
+                   * - data do último removido_em da tabela de agendamentos
+                   */
+                  DROP TEMPORARY TABLE IF EXISTS REGISTROS_COM_CONCLUIDO;
+                  CREATE TEMPORARY TABLE REGISTROS_COM_CONCLUIDO AS
+                  SELECT R.ID                                                     AS id_registro,
+                         R.usuario_id                                             AS id_usuario,
+                         MAX(I.dt_criacao)                                        AS dt_ultimo_concluido,
+                         CASE WHEN MAX(C.id) IS NOT NULL THEN TRUE ELSE FALSE END AS fl_possui_agendamento,
+                         MAX(C.removida_em)                                       AS dt_ultimo_removido_em
+                  FROM registro R
+                           JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT i.is_deleted
+                           LEFT JOIN conclusao_programada c ON c.id_registro = r.id
+                  WHERE NOT R.is_concluido
+                    AND NOT R.is_deleted
+                  GROUP BY R.ID, R.usuario_id;
+              
+                  /*
+                   * insere os registros na tabela de conclusão programada se:
+                   * O registro não existir na tabela de conclusão programada ou, caso exista,
+                   * ele não deve estar com a data de remoção aberta e a data de remoção deve ser anterior
+                   * à data da última interação.
+                   */
+                  INSERT INTO conclusao_programada (DT_CRIACAO, ID_REGISTRO, ID_USUARIO, REMOVIDA_EM, CONCLUSAO_PROGRAMADA_PARA)
+                  SELECT CURRENT_TIMESTAMP                                AS dt_criacao,
+                         id_registro                                      AS id_registro,
+                         id_usuario                                       AS id_usuario,
+                         NULL                                             AS removida_em,
+                         DATE_ADD(dt_ultimo_concluido, INTERVAL 30 DAY)   AS conclusao_programada_para
+                  FROM REGISTROS_COM_CONCLUIDO r
+                  WHERE NOT fl_possui_agendamento OR dt_ultimo_concluido > dt_ultimo_removido_em;
+              
+                  /*
+                   * conclui os registros programados para remoção
+                   * e sinaliza na tabela de conclusão programada que foram removidos
+                   */
+                  UPDATE registro
+                  SET is_concluido = TRUE,
+                      dt_conclusao = CURRENT_TIMESTAMP
+                  WHERE id IN
+                        (SELECT ID_REGISTRO FROM conclusao_programada WHERE conclusao_programada_para < CURRENT_TIMESTAMP AND removida_em IS NULL);
+              
+                  UPDATE conclusao_programada
+                  SET removida_em = CURRENT_TIMESTAMP
+                  WHERE conclusao_programada_para < CURRENT_TIMESTAMP
+                    AND removida_em IS NULL;
+              
+              END;
+              """);
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -180,73 +181,72 @@ public class StartSeeder implements CommandLineRunner {
    }
 
    private void createProcedureAdminListarRegistros() {
-      // #ToDo: dtAteConclusao
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS;");
       jdbcTemplate.execute("""
-              CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000), IN p_offset INT, IN p_limite INT, IN p_ordenacao VARCHAR(255))
-                                        BEGIN
-             
-                                            /*
-                                             * select base com os campos que serão retornados
-                                             */
-                                            SET @SELECT_BASE = CONCAT(
-                                                    ' SELECT r.id                                                    AS id,                              ',
-                                                    '        r.titulo                                                AS titulo,                          ',
-                                                    '        r.usuario_id                                            AS usuarioId,                       ',
-                                                    '        r.dt_criacao                                            AS dtCriacao,                       ',
-                                                    '        r.dt_modificacao                                        AS dtModificacao,                   ',
-                                                    '        r.dt_conclusao                                          AS dtConclusao,                     ',
-                                                    '        c.nome                                                  AS categoria,                       ',
-                                                    '        r.bairro                                                AS bairro,                          ',
-                                                    '        cp.conclusao_programada_para                            AS dtAteConclusao,                  ',
-                                                    '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,                   ',
-                                                    '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,                   ',
-                                                    '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante                  ',
-                                                    ' FROM REGISTRO r                                                                                    ',
-                                                    '          LEFT JOIN categoria c ON r.categoria_id = c.id                                            ',
-                                                    '          LEFT JOIN interacao i ON i.id_registro = r.id                                             ',
-                                                    '          LEFT JOIN conclusao_programada cp ON r.id = cp.id_registro AND cp.removida_em IS NULL     ');
-                                       
-                                            /*
-                                             * filtros simples
-                                             */
-                                            SET @FILTROS_BASE = CONCAT(
-                                                    ' WHERE not r.is_deleted AND (r.id LIKE LOWER(''%', p_id_nome, '%'') ',
-                                                    ' OR r.titulo LIKE LOWER(''%', p_id_nome, '%'') )',
-                                                    ' AND (r.usuario_id = ', p_id_usuario, ' OR ', p_id_usuario, ' = 0) ',
-                                                    ' AND (c.id = ', p_id_categoria, ' OR ', p_id_categoria, ' = 0) ',
-                                                    ' AND (r.bairro LIKE LOWER(''%', p_bairro, '%'') OR '', p_bairro,'' = '''') ');
-                                       
-                                            /*
-                                             * filtro de status que precisou ser separado por causa do tipo
-                                             */
-                                            SET @FILTRO_STATUS = CASE
-                                                                     WHEN p_status <> '' THEN
-                                                                         CASE
-                                                                             WHEN p_status = 'ATIVO' THEN ' AND (r.dt_conclusao IS NULL) '
-                                                                             WHEN p_status = 'CONCLUIDO' THEN ' AND (r.dt_conclusao IS NOT NULL) '
-                                                                             END
-                                                                     ELSE '' END;
-                                       
-                                       
-                                            /*
-                                             * ordenação e paginação
-                                             */
-                                            SET @MAIN_QUERY = CONCAT(
-                                                    @SELECT_BASE,
-                                                    @FILTROS_BASE,
-                                                    @FILTRO_STATUS,
-                                                    ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro, cp.conclusao_programada_para ',
-                                                    ' ORDER BY ', p_ordenacao,
-                                                    ' LIMIT ', p_limite, ' OFFSET ', p_offset);
-                                       
-                                       
-                                            PREPARE stmt FROM @MAIN_QUERY;
-                                            EXECUTE stmt;
-                                            DEALLOCATE PREPARE stmt;
-                                        END
-             
-             """);
+               CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000), IN p_offset INT, IN p_limite INT, IN p_ordenacao VARCHAR(255))
+                                         BEGIN
+              
+                                             /*
+                                              * select base com os campos que serão retornados
+                                              */
+                                             SET @SELECT_BASE = CONCAT(
+                                                     ' SELECT r.id                                                    AS id,                              ',
+                                                     '        r.titulo                                                AS titulo,                          ',
+                                                     '        r.usuario_id                                            AS usuarioId,                       ',
+                                                     '        r.dt_criacao                                            AS dtCriacao,                       ',
+                                                     '        r.dt_modificacao                                        AS dtModificacao,                   ',
+                                                     '        r.dt_conclusao                                          AS dtConclusao,                     ',
+                                                     '        c.nome                                                  AS categoria,                       ',
+                                                     '        r.bairro                                                AS bairro,                          ',
+                                                     '        cp.conclusao_programada_para                            AS dtAteConclusao,                  ',
+                                                     '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,                   ',
+                                                     '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,                   ',
+                                                     '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante                  ',
+                                                     ' FROM REGISTRO r                                                                                    ',
+                                                     '          LEFT JOIN categoria c ON r.categoria_id = c.id                                            ',
+                                                     '          LEFT JOIN interacao i ON i.id_registro = r.id                                             ',
+                                                     '          LEFT JOIN conclusao_programada cp ON r.id = cp.id_registro AND cp.removida_em IS NULL     ');
+              
+                                             /*
+                                              * filtros simples
+                                              */
+                                             SET @FILTROS_BASE = CONCAT(
+                                                     ' WHERE not r.is_deleted AND (r.id LIKE LOWER(''%', p_id_nome, '%'') ',
+                                                     ' OR r.titulo LIKE LOWER(''%', p_id_nome, '%'') )',
+                                                     ' AND (r.usuario_id = ', p_id_usuario, ' OR ', p_id_usuario, ' = 0) ',
+                                                     ' AND (c.id = ', p_id_categoria, ' OR ', p_id_categoria, ' = 0) ',
+                                                     ' AND (r.bairro LIKE LOWER(''%', p_bairro, '%'') OR '', p_bairro,'' = '''') ');
+              
+                                             /*
+                                              * filtro de status que precisou ser separado por causa do tipo
+                                              */
+                                             SET @FILTRO_STATUS = CASE
+                                                                      WHEN p_status <> '' THEN
+                                                                          CASE
+                                                                              WHEN p_status = 'ATIVO' THEN ' AND (r.dt_conclusao IS NULL) '
+                                                                              WHEN p_status = 'CONCLUIDO' THEN ' AND (r.dt_conclusao IS NOT NULL) '
+                                                                              END
+                                                                      ELSE '' END;
+              
+              
+                                             /*
+                                              * ordenação e paginação
+                                              */
+                                             SET @MAIN_QUERY = CONCAT(
+                                                     @SELECT_BASE,
+                                                     @FILTROS_BASE,
+                                                     @FILTRO_STATUS,
+                                                     ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro, cp.conclusao_programada_para ',
+                                                     ' ORDER BY ', p_ordenacao,
+                                                     ' LIMIT ', p_limite, ' OFFSET ', p_offset);
+              
+              
+                                             PREPARE stmt FROM @MAIN_QUERY;
+                                             EXECUTE stmt;
+                                             DEALLOCATE PREPARE stmt;
+                                         END
+              
+              """);
       jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS_COUNT;");
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS_COUNT(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000))
@@ -373,6 +373,48 @@ public class StartSeeder implements CommandLineRunner {
                       LOWER(email) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
                       ID LIKE CONCAT('%', p_termo, '%')
                       );
+              END;
+              """);
+   }
+
+   private void createProceduresRelatorios() {
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_BAIRRO");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_CATEGORIA");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_STATUS");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_RELATORIO_BAIRRO(IN p_data_inicio DATETIME)
+              BEGIN
+                  SELECT BAIRRO, COUNT(*) AS QUANTIDADE
+                  FROM REGISTRO
+                  WHERE NOT IS_DELETED
+                    AND NOT IS_CONCLUIDO
+                    AND DT_CRIACAO >= p_data_inicio
+                  GROUP BY BAIRRO
+                  ORDER BY QUANTIDADE DESC;
+              END;
+              """);
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_RELATORIO_CATEGORIA(IN p_data_inicio DATETIME)
+              BEGIN
+                  SELECT C.NOME AS CATEGORIA, COUNT(*) QUANTIDADE
+                  FROM REGISTRO R
+                           LEFT JOIN CATEGORIA C ON C.ID = R.categoria_id
+                  WHERE NOT R.IS_DELETED
+                    AND NOT R.IS_CONCLUIDO
+                    AND R.DT_CRIACAO >= p_data_inicio
+                  GROUP BY C.NOME
+                  ORDER BY QUANTIDADE DESC;
+              END;
+              """);
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_RELATORIO_STATUS(IN p_data_inicio DATETIME)
+              BEGIN
+                  SELECT CASE WHEN IS_CONCLUIDO THEN 'Concluído' ELSE 'Ativo' END AS STATUS, COUNT(*) QUANTIDADE
+                  FROM REGISTRO
+                  WHERE NOT IS_DELETED
+                    AND DT_CRIACAO >= p_data_inicio
+                  GROUP BY IS_CONCLUIDO
+                  ORDER BY QUANTIDADE DESC;
               END;
               """);
    }
