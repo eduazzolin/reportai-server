@@ -66,7 +66,7 @@ public class RegistroController {
       return ResponseEntity.ok().build();
    }
 
-   @PutMapping("/{id}/remover-conclusao-programada")
+   @PutMapping("/{id}/ignorar-conclusao")
    public ResponseEntity<?> removerConclusaoProgramada(@PathVariable Long id) {
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
       Registro registro = service.buscarPorId(id);
