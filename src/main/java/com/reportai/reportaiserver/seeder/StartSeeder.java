@@ -7,6 +7,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.*;
 import static com.reportai.reportaiserver.model.Usuario.Roles.ADMIN;
 import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
@@ -43,6 +45,11 @@ public class StartSeeder implements CommandLineRunner {
       createProcedureAdminListarUsuarios();
       createProcedureAdminListarRegistros();
       createProcedureConclusaoAutomatica();
+      callProcedure("SP_CONCLUSAO_AUTOMATICA");
+   }
+
+   private void callProcedure(String procedureName) {
+      jdbcTemplate.execute("CALL " + procedureName + "();");
    }
 
    private void createProcedureConclusaoAutomatica() {
@@ -79,16 +86,31 @@ public class StartSeeder implements CommandLineRunner {
               * à data da última interação.
               */
              INSERT INTO conclusao_programada (DT_CRIACAO, ID_REGISTRO, ID_USUARIO, REMOVIDA_EM, CONCLUSAO_PROGRAMADA_PARA)
-             SELECT CURRENT_TIMESTAMP                            AS dt_criacao,
-                    id_registro                                  AS id_registro,
-                    id_usuario                                   AS id_usuario,
-                    NULL                                         AS removida_em,
-                    DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY) AS conclusao_programada_para
+             SELECT CURRENT_TIMESTAMP                                AS dt_criacao,
+                    id_registro                                      AS id_registro,
+                    id_usuario                                       AS id_usuario,
+                    NULL                                             AS removida_em,
+                    DATE_ADD(dt_ultimo_concluido, INTERVAL 30 DAY)   AS conclusao_programada_para
              FROM REGISTROS_COM_CONCLUIDO r
              WHERE NOT fl_possui_agendamento OR dt_ultimo_concluido > dt_ultimo_removido_em;
          
+             /*
+              * conclui os registros programados para remoção
+              * e sinaliza na tabela de conclusão programada que foram removidos
+              */
+             UPDATE registro
+             SET is_concluido = TRUE,
+                 dt_conclusao = CURRENT_TIMESTAMP
+             WHERE id IN
+                   (SELECT ID_REGISTRO FROM conclusao_programada WHERE conclusao_programada_para < CURRENT_TIMESTAMP AND removida_em IS NULL);
+         
+             UPDATE conclusao_programada
+             SET removida_em = CURRENT_TIMESTAMP
+             WHERE conclusao_programada_para < CURRENT_TIMESTAMP
+               AND removida_em IS NULL;
+         
          END;
-              """);
+         """);
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -552,14 +574,14 @@ public class StartSeeder implements CommandLineRunner {
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).dtCriacao(LocalDateTime.now().minusDays(15)).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).dtCriacao(LocalDateTime.now().minusDays(21)).build());
 
       }
 
