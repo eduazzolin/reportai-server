@@ -21,6 +21,7 @@ public enum ErrorDictionary {
    ,INTERACAO_DUPLICADA("ERRO-017", "Interação já existe para o registro.")
    ,SEM_PERMISSAO("ERRO-018", "Usuário sem permissão para realizar a operação.")
    ,ERRO_GCS("ERRO-019", "Erro ao se comunicar com o Google Cloud Storage.")
+   ,REGISTRO_JA_CONCLUIDO("ERRO-020", "Registro já está concluído.")
    ;
    private final String codigo;
    private final String descricao;

@@ -150,6 +150,10 @@ public class RegistroService {
     */
    public void concluirPorId(Registro registro) {
 
+      if (registro.getIsConcluido()) {
+         throw new CustomException(ErrorDictionary.REGISTRO_JA_CONCLUIDO);
+      }
+
       removerConclusaoProgramada(registro);
 
       registro.setIsConcluido(true);
