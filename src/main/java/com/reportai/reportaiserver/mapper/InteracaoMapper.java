@@ -1,12 +1,12 @@
 package com.reportai.reportaiserver.mapper;
 
-import com.reportai.reportaiserver.dto.InteracaoRelevanteDTO;
+import com.reportai.reportaiserver.dto.InteracaoDTO;
 import com.reportai.reportaiserver.model.Interacao;
 
 public class InteracaoMapper {
 
-   public static InteracaoRelevanteDTO toInteracaoRelevanteDTO (Interacao interacao){
-      InteracaoRelevanteDTO dto = new InteracaoRelevanteDTO();
+   public static InteracaoDTO toInteracaoDTO(Interacao interacao){
+      InteracaoDTO dto = new InteracaoDTO();
       dto.setId(interacao.getId());
       dto.setTipo(interacao.getTipo());
       dto.setUsuario(interacao.getUsuario().getNome());

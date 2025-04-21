@@ -1,12 +1,10 @@
 package com.reportai.reportaiserver.controller;
 
-import com.reportai.reportaiserver.dto.MeusRegistrosDTO;
 import com.reportai.reportaiserver.dto.TokenDTO;
 import com.reportai.reportaiserver.dto.UsuarioDTO;
-import com.reportai.reportaiserver.dto.UsuariosPaginadoDTO;
+import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
-import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -31,13 +27,31 @@ public class UsuarioController {
 
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
-      Usuario usuarioSalvo = service.save(usuario);
+
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+
+      if (usuario.getId() != null) {
+
+         if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+            throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+         }
+
+
+         Usuario usuarioExistente = service.buscarPorId(usuario.getId());
+         usuarioExistente.setNome(usuario.getNome());
+         usuarioExistente.setEmail(usuario.getEmail());
+         if (usuario.getSenha() != null) {
+            usuarioExistente.setSenha(usuario.getSenha());
+         }
+         usuario = usuarioExistente;
+      }
+      Usuario usuarioSalvo = service.salvar(usuario);
       return ResponseEntity.ok(usuarioSalvo);
    }
 
    @DeleteMapping("/{id}")
    public ResponseEntity<?> deletar(@PathVariable Long id) {
-      service.deleteById(id);
+      service.removerPorId(id);
       return ResponseEntity.ok().build();
    }
 
@@ -57,21 +71,26 @@ public class UsuarioController {
 
    @GetMapping("/{id}")
    public ResponseEntity<?> buscarDTOPorId(@PathVariable Long id) {
-      UsuarioDTO usuario = service.findDTOById(id);
+      UsuarioDTO usuario = service.buscarDTOPorId(id);
       return ResponseEntity.ok(usuario);
    }
 
 
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarTodos(@RequestParam int pagina, @RequestParam int limite) {
-      Usuario usuario = usuarioService.findAtivosById(1L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> buscarPorTermo(
+           @RequestParam int pagina,
+           @RequestParam int limite,
+           @RequestParam String termo,
+           @RequestParam String ordenacao) {
+
+      Usuario usuario = usuarioService.buscarAtivosPorId(2L); // #ToDo #SpringSecurity
 
       if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      UsuariosPaginadoDTO usuariosPaginadoDTO = service.findAtivos(pagina, limite);
-      return ResponseEntity.ok(usuariosPaginadoDTO);
+      UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, ordenacao);
+      return ResponseEntity.ok(usuariosAdminPaginadoDTO);
    }
 
 

@@ -1,7 +1,8 @@
 package com.reportai.reportaiserver.service;
 
 import com.reportai.reportaiserver.dto.UsuarioDTO;
-import com.reportai.reportaiserver.dto.UsuariosPaginadoDTO;
+import com.reportai.reportaiserver.dto.UsuarioListagemAdminProjection;
+import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
@@ -10,13 +11,8 @@ import com.reportai.reportaiserver.repository.UsuarioRepository;
 import com.reportai.reportaiserver.utils.UsuarioUtils;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +27,7 @@ public class UsuarioService {
    @Autowired
    private Validacoes validacoes;
 
-   public Usuario save(Usuario usuario) {
+   public Usuario salvar(Usuario usuario) {
       validacoes.validarUsuario(usuario);
       usuario.setRole(USUARIO);
       if (usuario.getId() != null) {
@@ -59,7 +55,7 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuarioDTO findDTOById(Long id) {
+   public UsuarioDTO buscarDTOPorId(Long id) {
       Optional<Usuario> usuario = repository.findById(id);
       if (usuario.isEmpty()) {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
@@ -67,7 +63,15 @@ public class UsuarioService {
       return UsuarioMapper.toDTO(usuario.get());
    }
 
-   public Usuario findAtivosById(Long id) {
+   public Usuario buscarPorId(Long id) {
+      Optional<Usuario> usuario = repository.findById(id);
+      if (usuario.isEmpty()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+      return usuario.get();
+   }
+
+   public Usuario buscarAtivosPorId(Long id) {
       Optional<Usuario> usuario = repository.findByIdAndIsDeleted(id, false);
       if (usuario.isEmpty()) {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
@@ -75,20 +79,16 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuariosPaginadoDTO findAtivos(int pagina, int limite) {
-      Pageable pageable = PageRequest.of(pagina, limite, Sort.by("nome"));
-      Page<Usuario> resultado = repository.findByIsDeleted(false, pageable);
+   public UsuariosAdminPaginadoDTO buscarUsuariosAdminPaginadoDTOPorTermos(int pagina, int limite, String termo, String ordenacao) {
 
-      List<Usuario> usuarios = resultado.getContent();
-      int totalPaginas = resultado.getTotalPages();
-      long totalUsuarios = resultado.getTotalElements();
+      int offset = pagina * limite;
+      int totalUsuarios = repository.countAtivosByTermo(termo);
+      int totalPaginas = (int) Math.ceil((double) totalUsuarios / limite);
 
-      List<UsuarioDTO> usuariosDTO = new ArrayList<>();
-      for (Usuario usuario : usuarios) {
-         usuariosDTO.add(UsuarioMapper.toDTO(usuario));
-      }
 
-      return UsuariosPaginadoDTO.builder()
+      List<UsuarioListagemAdminProjection> usuariosDTO = repository.searchAtivosByTermo(termo, offset, limite, ordenacao);
+
+      return UsuariosAdminPaginadoDTO.builder()
               .pagina(pagina)
               .limite(limite)
               .totalPaginas(totalPaginas)
@@ -97,13 +97,9 @@ public class UsuarioService {
               .build();
    }
 
-   public void deleteById(Long id) {
-      Optional<Usuario> usuario = repository.findById(id);
-      if (usuario.isEmpty()) {
-         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
-      }
-
-      usuario.get().setIsDeleted(true);
-      repository.save(usuario.get());
+   public void removerPorId(Long id) {
+      Usuario usuario = buscarAtivosPorId(id);
+      usuario.setIsDeleted(true);
+      repository.save(usuario);
    }
 }

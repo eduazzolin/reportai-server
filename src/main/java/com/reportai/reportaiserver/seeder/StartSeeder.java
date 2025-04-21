@@ -7,9 +7,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.CONCLUIDO;
-import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.RELEVANTE;
-import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.IRRELEVANTE;
+import java.time.LocalDateTime;
+
+import static com.reportai.reportaiserver.model.Interacao.TipoInteracao.*;
 import static com.reportai.reportaiserver.model.Usuario.Roles.ADMIN;
 import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
 
@@ -42,6 +42,76 @@ public class StartSeeder implements CommandLineRunner {
       createProcedureRegistroPorDistancia();
       loadImagem();
       loadInteracoes();
+      createProcedureAdminListarUsuarios();
+      createProcedureAdminListarRegistros();
+      createProcedureConclusaoAutomatica();
+      createProceduresRelatorios();
+      callProcedure("SP_CONCLUSAO_AUTOMATICA");
+   }
+
+   private void callProcedure(String procedureName) {
+      jdbcTemplate.execute("CALL " + procedureName + "();");
+   }
+
+   private void createProcedureConclusaoAutomatica() {
+
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_CONCLUSAO_AUTOMATICA");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_CONCLUSAO_AUTOMATICA()
+              BEGIN
+              
+                  /*
+                   * tabela com os registros ativos enriquecida com:
+                   * - data da última interação do tipo 'concluído'
+                   * - flag se possui ou não agendamento
+                   * - data do último removido_em da tabela de agendamentos
+                   */
+                  DROP TEMPORARY TABLE IF EXISTS REGISTROS_COM_CONCLUIDO;
+                  CREATE TEMPORARY TABLE REGISTROS_COM_CONCLUIDO AS
+                  SELECT R.ID                                                     AS id_registro,
+                         R.usuario_id                                             AS id_usuario,
+                         MAX(I.dt_criacao)                                        AS dt_ultimo_concluido,
+                         CASE WHEN MAX(C.id) IS NOT NULL THEN TRUE ELSE FALSE END AS fl_possui_agendamento,
+                         MAX(C.removida_em)                                       AS dt_ultimo_removido_em
+                  FROM registro R
+                           JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT i.is_deleted
+                           LEFT JOIN conclusao_programada c ON c.id_registro = r.id
+                  WHERE NOT R.is_concluido
+                    AND NOT R.is_deleted
+                  GROUP BY R.ID, R.usuario_id;
+              
+                  /*
+                   * insere os registros na tabela de conclusão programada se:
+                   * O registro não existir na tabela de conclusão programada ou, caso exista,
+                   * ele não deve estar com a data de remoção aberta e a data de remoção deve ser anterior
+                   * à data da última interação.
+                   */
+                  INSERT INTO conclusao_programada (DT_CRIACAO, ID_REGISTRO, ID_USUARIO, REMOVIDA_EM, CONCLUSAO_PROGRAMADA_PARA)
+                  SELECT CURRENT_TIMESTAMP                                AS dt_criacao,
+                         id_registro                                      AS id_registro,
+                         id_usuario                                       AS id_usuario,
+                         NULL                                             AS removida_em,
+                         DATE_ADD(dt_ultimo_concluido, INTERVAL 30 DAY)   AS conclusao_programada_para
+                  FROM REGISTROS_COM_CONCLUIDO r
+                  WHERE NOT fl_possui_agendamento OR dt_ultimo_concluido > dt_ultimo_removido_em;
+              
+                  /*
+                   * conclui os registros programados para remoção
+                   * e sinaliza na tabela de conclusão programada que foram removidos
+                   */
+                  UPDATE registro
+                  SET is_concluido = TRUE,
+                      dt_conclusao = CURRENT_TIMESTAMP
+                  WHERE id IN
+                        (SELECT ID_REGISTRO FROM conclusao_programada WHERE conclusao_programada_para < CURRENT_TIMESTAMP AND removida_em IS NULL);
+              
+                  UPDATE conclusao_programada
+                  SET removida_em = CURRENT_TIMESTAMP
+                  WHERE conclusao_programada_para < CURRENT_TIMESTAMP
+                    AND removida_em IS NULL;
+              
+              END;
+              """);
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -110,6 +180,245 @@ public class StartSeeder implements CommandLineRunner {
       ;
    }
 
+   private void createProcedureAdminListarRegistros() {
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS;");
+      jdbcTemplate.execute("""
+               CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000), IN p_offset INT, IN p_limite INT, IN p_ordenacao VARCHAR(255))
+                                         BEGIN
+              
+                                             /*
+                                              * select base com os campos que serão retornados
+                                              */
+                                             SET @SELECT_BASE = CONCAT(
+                                                     ' SELECT r.id                                                    AS id,                              ',
+                                                     '        r.titulo                                                AS titulo,                          ',
+                                                     '        r.usuario_id                                            AS usuarioId,                       ',
+                                                     '        r.dt_criacao                                            AS dtCriacao,                       ',
+                                                     '        r.dt_modificacao                                        AS dtModificacao,                   ',
+                                                     '        r.dt_conclusao                                          AS dtConclusao,                     ',
+                                                     '        c.nome                                                  AS categoria,                       ',
+                                                     '        r.bairro                                                AS bairro,                          ',
+                                                     '        cp.conclusao_programada_para                            AS dtAteConclusao,                  ',
+                                                     '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,                   ',
+                                                     '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,                   ',
+                                                     '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante                  ',
+                                                     ' FROM REGISTRO r                                                                                    ',
+                                                     '          LEFT JOIN categoria c ON r.categoria_id = c.id                                            ',
+                                                     '          LEFT JOIN interacao i ON i.id_registro = r.id                                             ',
+                                                     '          LEFT JOIN conclusao_programada cp ON r.id = cp.id_registro AND cp.removida_em IS NULL     ');
+              
+                                             /*
+                                              * filtros simples
+                                              */
+                                             SET @FILTROS_BASE = CONCAT(
+                                                     ' WHERE not r.is_deleted AND (r.id LIKE LOWER(''%', p_id_nome, '%'') ',
+                                                     ' OR r.titulo LIKE LOWER(''%', p_id_nome, '%'') )',
+                                                     ' AND (r.usuario_id = ', p_id_usuario, ' OR ', p_id_usuario, ' = 0) ',
+                                                     ' AND (c.id = ', p_id_categoria, ' OR ', p_id_categoria, ' = 0) ',
+                                                     ' AND (r.bairro LIKE LOWER(''%', p_bairro, '%'') OR '', p_bairro,'' = '''') ');
+              
+                                             /*
+                                              * filtro de status que precisou ser separado por causa do tipo
+                                              */
+                                             SET @FILTRO_STATUS = CASE
+                                                                      WHEN p_status <> '' THEN
+                                                                          CASE
+                                                                              WHEN p_status = 'ATIVO' THEN ' AND (r.dt_conclusao IS NULL) '
+                                                                              WHEN p_status = 'CONCLUIDO' THEN ' AND (r.dt_conclusao IS NOT NULL) '
+                                                                              END
+                                                                      ELSE '' END;
+              
+              
+                                             /*
+                                              * ordenação e paginação
+                                              */
+                                             SET @MAIN_QUERY = CONCAT(
+                                                     @SELECT_BASE,
+                                                     @FILTROS_BASE,
+                                                     @FILTRO_STATUS,
+                                                     ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro, cp.conclusao_programada_para ',
+                                                     ' ORDER BY ', p_ordenacao,
+                                                     ' LIMIT ', p_limite, ' OFFSET ', p_offset);
+              
+              
+                                             PREPARE stmt FROM @MAIN_QUERY;
+                                             EXECUTE stmt;
+                                             DEALLOCATE PREPARE stmt;
+                                         END
+              
+              """);
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_REGISTROS_COUNT;");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_ADMIN_LISTAR_REGISTROS_COUNT(IN p_id_nome VARCHAR(1000), IN p_id_usuario INT, IN p_id_categoria VARCHAR(1000), IN p_bairro VARCHAR(1000), IN p_status VARCHAR(1000))
+              BEGIN
+              
+                  /*
+                   * select base com os campos que serão retornados
+                   */
+                  SET @SELECT_BASE = CONCAT(
+                          ' SELECT COUNT(*) FROM (',
+                          ' SELECT r.id                                                      AS id,                ',
+                          '        r.titulo                                                  AS titulo,            ',
+                          '        r.usuario_id                                              AS usuarioId,         ',
+                          '        r.dt_criacao                                              AS dtCriacao,         ',
+                          '        r.dt_modificacao                                          AS dtModificacao,     ',
+                          '        r.dt_conclusao                                            AS dtConclusao,       ',
+                          '        c.nome                                                    AS categoria,         ',
+                          '        r.bairro                                                  AS bairro,            ',
+                          '        NULL                                                      AS dtAteConclusao,    ',
+                          '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,       ',
+                          '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,       ',
+                          '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante      ',
+                          ' FROM REGISTRO r                                                                        ',
+                          '          LEFT JOIN categoria c ON r.categoria_id = c.id                                ',
+                          '          LEFT JOIN interacao i ON i.id_registro = r.id                                 ');
+              
+                  /*
+                   * filtros simples
+                   */
+                  SET @FILTROS_BASE = CONCAT(
+                          ' WHERE not r.is_deleted AND (r.id LIKE LOWER(''%', p_id_nome, '%'') ',
+                          ' OR r.titulo LIKE LOWER(''%', p_id_nome, '%'') )',
+                          ' AND (r.usuario_id = ', p_id_usuario, ' OR ', p_id_usuario, ' = 0) ',
+                          ' AND (c.id = ', p_id_categoria, ' OR ', p_id_categoria, ' = 0) ',
+                          ' AND (r.bairro LIKE LOWER(''%', p_bairro, '%'') OR '', p_bairro,'' = '''') ');
+              
+                  /*
+                   * filtro de status que precisou ser separado por causa do tipo
+                   */
+                  SET @FILTRO_STATUS = CASE
+                                           WHEN p_status <> '' THEN
+                                               CASE
+                                                   WHEN p_status = 'ATIVO' THEN ' AND (r.dt_conclusao IS NULL) '
+                                                   WHEN p_status = 'CONCLUIDO' THEN ' AND (r.dt_conclusao IS NOT NULL) '
+                                                   END
+                                           ELSE '' END;
+              
+              
+                  /*
+                   * ordenação e paginação
+                   */
+                  SET @MAIN_QUERY = CONCAT(
+                          @SELECT_BASE,
+                          @FILTROS_BASE,
+                          @FILTRO_STATUS,
+                          ' GROUP BY r.id, r.titulo, r.usuario_id, r.dt_criacao, r.dt_modificacao, r.dt_conclusao, c.nome, r.bairro ',
+                          ' ) e');
+              
+              
+                  PREPARE stmt FROM @MAIN_QUERY;
+                  EXECUTE stmt;
+                  DEALLOCATE PREPARE stmt;
+              END;
+              
+              """);
+
+      ;
+   }
+
+   private void createProcedureAdminListarUsuarios() {
+
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_USUARIOS;");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_ADMIN_LISTAR_USUARIOS_COUNT;");
+      jdbcTemplate.execute("""
+              /*
+               * listagem de usuários com paginação e pesquisa por termos
+               */
+              CREATE PROCEDURE SP_ADMIN_LISTAR_USUARIOS(
+                       IN p_termo VARCHAR(1000),
+                       IN p_offset INT,
+                       IN p_limite INT,
+                       IN p_ordenacao VARCHAR(255)
+                   )
+                   BEGIN
+                       SET @sql = CONCAT('
+                           SELECT u.id,
+                                  u.nome,
+                                  u.cpf,
+                                  u.dt_criacao AS dtCriacao,
+                                  u.dt_modificacao AS dtModificacao,
+                                  u.email AS email,
+                                  u.is_deleted AS isDeleted,
+                                  u.role,
+                                  COUNT(r.ID) AS totalRegistros
+                           FROM usuario u
+                           LEFT JOIN registro r ON r.usuario_id = u.ID
+                           WHERE NOT u.is_deleted
+                             AND (
+                               LOWER(u.nome) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
+                               LOWER(u.cpf) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
+                               LOWER(u.email) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
+                               u.ID LIKE CONCAT("%","', p_termo, '", "%")
+                             )
+                           GROUP BY u.id, u.cpf, u.dt_criacao, u.dt_modificacao, u.email, u.is_deleted, u.nome, u.role
+                           ORDER BY ', p_ordenacao, '
+                           LIMIT ', p_limite, ' OFFSET ', p_offset);
+              
+                       PREPARE stmt FROM @sql;
+                       EXECUTE stmt;
+                       DEALLOCATE PREPARE stmt;
+                   END;
+              """);
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_ADMIN_LISTAR_USUARIOS_COUNT(
+                  IN p_termo VARCHAR(1000)
+              )
+              BEGIN
+                  SELECT COUNT(*)
+                  FROM usuario
+                  WHERE NOT is_deleted
+                    AND (
+                      LOWER(nome) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
+                      LOWER(cpf) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
+                      LOWER(email) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
+                      ID LIKE CONCAT('%', p_termo, '%')
+                      );
+              END;
+              """);
+   }
+
+   private void createProceduresRelatorios() {
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_BAIRRO");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_CATEGORIA");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_RELATORIO_STATUS");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_RELATORIO_BAIRRO(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
+              BEGIN
+                  SELECT BAIRRO, COUNT(*) AS QUANTIDADE
+                  FROM REGISTRO
+                  WHERE NOT IS_DELETED
+                    AND NOT IS_CONCLUIDO
+                    AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
+                  GROUP BY BAIRRO
+                  ORDER BY QUANTIDADE DESC;
+              END;
+              """);
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_RELATORIO_CATEGORIA(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
+              BEGIN
+                  SELECT C.NOME AS CATEGORIA, COUNT(*) QUANTIDADE
+                  FROM REGISTRO R
+                           LEFT JOIN CATEGORIA C ON C.ID = R.categoria_id
+                  WHERE NOT R.IS_DELETED
+                    AND NOT R.IS_CONCLUIDO
+                    AND  CAST(R.DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
+                  GROUP BY C.NOME
+                  ORDER BY QUANTIDADE DESC;
+              END;
+              """);
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_RELATORIO_STATUS(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
+              BEGIN
+                  SELECT CASE WHEN IS_CONCLUIDO THEN 'Concluído' ELSE 'Ativo' END AS STATUS, COUNT(*) QUANTIDADE
+                  FROM REGISTRO
+                  WHERE NOT IS_DELETED
+                    AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
+                  GROUP BY IS_CONCLUIDO
+                  ORDER BY QUANTIDADE DESC;
+              END;
+              """);
+   }
+
    private void loadCategoria() {
       if (categoriaRepository.count() == 0) {
          categoriaRepository.save(Categoria.builder().nome("Buraco na rua").icone("/markers/street.svg").isDeleted(false).build());
@@ -127,11 +436,11 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("User").email("Admin").senha("123456").cpf("111111").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("joao@silva.com").senha("123456").cpf("222222").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("333333").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("444444").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("555555").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("ADM").email("edu@rdo.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("160.410.930-09").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("João Silva").email("joao@silva.com").senha("123456").cpf("839.925.170-47").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("532.162.220-55").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("540.924.870-88").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("745.704.400-02").isDeleted(false).build());
       }
    }
 
@@ -143,6 +452,7 @@ public class StartSeeder implements CommandLineRunner {
                  .localizacao("Lauro Linhares perto do Angeloni")
                  .latitude(-27.585152417018662)
                  .longitude(-48.52451187162637)
+                 .bairro("Trindade")
                  .categoria(categoriaRepository.findById(1L).get())
                  .isConcluido(false)
                  .isDeleted(false)
@@ -155,6 +465,7 @@ public class StartSeeder implements CommandLineRunner {
                  .localizacao("Rua São Vicente de Paula, na Agronômica")
                  .latitude(-27.57841321989771)
                  .longitude(-48.538419398201704)
+                 .bairro("Agronômica")
                  .categoria(categoriaRepository.findById(2L).get())
                  .isConcluido(true)
                  .dtConclusao(java.time.LocalDateTime.now())
@@ -166,6 +477,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Calçada danificada")
                  .descricao("A calçada em frente ao prédio onde moro está danificada há meses. Os buracos e desníveis no passeio representam um risco para os pedestres que circulam pela região, especialmente para idosos, crianças e pessoas com mobilidade reduzida. A falta de manutenção da calçada compromete a segurança e a acessibilidade de todos que utilizam a via, tornando-a um ambiente hostil e perigoso.\n\nOs moradores do prédio têm relatado dificuldades para transitar pela calçada danificada, devido aos obstáculos e irregularidades no piso. Além disso, a situação se agrava nos dias de chuva, quando os buracos se enchem de água e dificultam ainda mais a passagem dos pedestres. A calçada danificada também compromete a estética da região, tornando-a menos atraente e convidativa para os moradores e visitantes.\n\nÉ urgente que a calçada seja reparada o mais rápido possível. Os moradores do prédio pedem que as autoridades competentes realizem os reparos necessários para garantir a segurança e a acessibilidade de todos que circulam pela região. Uma calçada bem conservada é essencial para promover a mobilidade urbana e o bem-estar da comunidade local.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. A manutenção da calçada danificada é uma medida simples, mas que tem um impacto significativo na qualidade de vida dos moradores e na segurança da região.")
                  .localizacao("Rua Presidente Coutinho 360")
+                 .bairro("Centro")
                  .latitude(-27.590744088315592)
                  .longitude(-48.55018902283705)
                  .categoria(categoriaRepository.findById(3L).get())
@@ -178,6 +490,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Poda de árvore")
                  .descricao("A árvore em frente à minha casa está com os galhos muito grandes e invadindo a fiação elétrica. Além disso, os galhos estão muito próximos da janela do meu quarto, o que representa um risco para a segurança da minha família. A árvore precisa de uma poda urgente para evitar acidentes e danos à propriedade.\n\nOs galhos da árvore estão encostando nos fios de eletricidade, o que pode causar curtos-circuitos e interrupções no fornecimento de energia. Além disso, a proximidade dos galhos com a janela do meu quarto aumenta o risco de acidentes, como a queda de galhos durante tempestades ou ventanias. A situação se agravou nos últimos dias, com o crescimento descontrolado da árvore e o aumento do risco de danos à propriedade e à segurança da minha família.\n\nÉ urgente que a árvore seja podada o mais rápido possível. Os moradores da rua estão preocupados com a situação e pedem que as autoridades competentes realizem os reparos necessários para garantir a segurança e o bem-estar de todos. Uma poda adequada é essencial para evitar acidentes e danos à propriedade, além de manter a saúde da árvore e a harmonia da paisagem urbana.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. A poda da árvore é uma medida simples, mas que tem um impacto significativo na segurança e na qualidade de vida dos moradores da região.")
                  .localizacao("Rua da Capela, Campeche")
+                 .bairro("Campeche")
                  .latitude(-27.675695192639118)
                  .longitude(-48.486439740613974)
                  .categoria(categoriaRepository.findById(4L).get())
@@ -190,6 +503,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Vazamento de água")
                  .descricao("Um vazamento de água está ocorrendo na rua onde moro há mais de uma semana. A água está jorrando de uma tubulação subterrânea, formando uma poça que se estende pela via e compromete a circulação de veículos e pedestres. O vazamento de água está causando desperdício de um recurso tão precioso e essencial para a vida, além de representar um risco para a segurança e a saúde da comunidade local.\n\nO vazamento de água está se agravando a cada dia, com o aumento da poça e o desperdício contínuo do recurso. A água acumulada na via pode causar acidentes e danos materiais, além de atrair insetos e roedores que representam um risco para a saúde pública. A situação é preocupante e exige uma intervenção imediata das autoridades responsáveis para conter o vazamento e reparar a tubulação danificada.\n\nÉ urgente que o vazamento de água seja reparado o mais rápido possível. Os moradores da rua estão preocupados com o desperdício do recurso hídrico e pedem que as autoridades competentes tomem as medidas necessárias para resolver o problema. Uma intervenção rápida e eficaz é essencial para evitar danos maiores e garantir o abastecimento de água para a comunidade local.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. O reparo do vazamento de água é uma medida simples, mas que tem um impacto significativo na preservação do meio ambiente e na qualidade de vida dos moradores da região.")
                  .localizacao("Rua Álvaro de Carvalho, perto do TICEN")
+                 .bairro("Centro")
                  .latitude(-27.595356626042015)
                  .longitude(-48.55304630289941)
                  .categoria(categoriaRepository.findById(5L).get())
@@ -202,6 +516,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Sinalização de trânsito")
                  .descricao("A sinalização de trânsito na rua onde moro está danificada e desatualizada há meses. As placas de trânsito estão desgastadas, sujas e mal posicionadas, comprometendo a segurança e a fluidez do tráfego na região. A falta de sinalização adequada torna a via um ambiente propício para acidentes e infrações, colocando em risco a vida dos motoristas, ciclistas e pedestres que circulam pelo local.\n\nA sinalização de trânsito desatualizada confunde os condutores e dificulta a interpretação das normas de trânsito, aumentando o risco de acidentes e infrações. A ausência de placas de sinalização e a má conservação das existentes comprometem a segurança viária e a organização do tráfego, tornando a rua um local caótico e perigoso. A situação se agravou nos últimos dias, com o aumento do fluxo de veículos e a falta de orientação adequada para os condutores.\n\nÉ urgente que a sinalização de trânsito seja revitalizada o mais rápido possível. Os moradores da rua estão preocupados com a segurança viária e pedem que as autoridades competentes realizem os reparos necessários para restabelecer a ordem e a segurança no tráfego local. Uma sinalização eficiente é essencial para garantir a segurança e a fluidez do trânsito, além de promover a convivência harmoniosa entre os diferentes modais de transporte.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. A revitalização da sinalização de trânsito é uma medida simples, mas que tem um impacto significativo na segurança viária e na qualidade de vida dos moradores da região.")
                  .localizacao("Canasvieiras, em frente ao Supermercado Magia")
+                 .bairro("Canasvieiras")
                  .latitude(-27.429936753773585)
                  .longitude(-48.45811156129758)
                  .categoria(categoriaRepository.findById(6L).get())
@@ -215,6 +530,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Barulho excessivo")
                  .descricao("O barulho excessivo na rua onde moro está prejudicando a qualidade de vida dos moradores. O som alto e constante perturba o sossego e o descanso das pessoas, causando estresse, irritação e problemas de saúde. O barulho excessivo é uma forma de poluição sonora que afeta a saúde física e mental dos moradores, interferindo no sono, na concentração e no bem-estar geral.\n\nO barulho é causado por veículos com escapamentos modificados, festas em residências e estabelecimentos comerciais, obras em horários inadequados e outros eventos que desrespeitam os limites de ruído estabelecidos pela legislação. A exposição contínua ao barulho excessivo pode causar danos auditivos, distúrbios do sono, problemas de concentração e irritabilidade, afetando a qualidade de vida e o bem-estar das pessoas.\n\nÉ urgente que medidas sejam tomadas para controlar o barulho excessivo na rua. Os moradores estão sofrendo com os impactos negativos do ruído constante e pedem que as autoridades competentes tomem providências para garantir o respeito aos limites de ruído e à saúde da comunidade. O controle do barulho é essencial para promover um ambiente saudável e harmonioso, onde todos possam viver com tranquilidade e segurança.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. O controle do barulho excessivo é uma medida simples, mas que tem um impacto significativo na qualidade de vida dos moradores e na preservação do ambiente urbano.")
                  .localizacao("Rua dos Marimbaus, Jurerê")
+                 .bairro("Jurerê Internacional")
                  .latitude(-27.441071927510585)
                  .longitude(-48.50369053721775)
                  .categoria(categoriaRepository.findById(7L).get())
@@ -227,6 +543,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Lixo acumulado")
                  .descricao("O lixo acumulado na rua onde moro está se tornando um problema sério para a comunidade. Os resíduos sólidos se acumulam nas calçadas, canteiros e terrenos baldios, causando mau cheiro, proliferação de insetos e roedores, e riscos à saúde pública. O acúmulo de lixo compromete a limpeza e a estética da região, além de representar um risco para o meio ambiente e a qualidade de vida dos moradores.\n\nO lixo acumulado é resultado da falta de coleta regular de resíduos sólidos, da má disposição dos resíduos pelos moradores e da ausência de conscientização ambiental na comunidade. Os resíduos sólidos se acumulam em locais inadequados, obstruindo as vias públicas, entupindo bueiros e causando transtornos para os moradores e transeuntes. A situação se agrava nos dias de chuva, quando o lixo se mistura à água da chuva e se espalha pela região, aumentando os riscos à saúde e ao meio ambiente.\n\nÉ urgente que o lixo acumulado seja recolhido e destinado corretamente. Os moradores da rua estão preocupados com a situação e pedem que as autoridades competentes realizem a limpeza e a coleta dos resíduos sólidos de forma regular e eficiente. A gestão adequada dos resíduos é essencial para promover a saúde pública, preservar o meio ambiente e garantir a qualidade de vida da comunidade local.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. A limpeza e a coleta do lixo acumulado são medidas simples, mas que têm um impacto significativo na saúde pública e na preservação do meio ambiente.")
                  .localizacao("Rua dos Timbres em Jurerê")
+                 .bairro("Jurerê Internacional")
                  .latitude(-27.441283946410383)
                  .longitude(-48.49486652631194)
                  .categoria(categoriaRepository.findById(8L).get())
@@ -240,6 +557,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Local perigoso para caminhar")
                  .descricao("A rua onde moro está se tornando um local perigoso para caminhar. A falta de calçadas adequadas, a presença de buracos e obstáculos no passeio, e a ausência de sinalização para pedestres comprometem a segurança e a acessibilidade dos pedestres que circulam pela região. A rua se tornou um ambiente hostil e inseguro para os pedestres, especialmente para idosos, crianças e pessoas com mobilidade reduzida.\n\nA falta de calçadas adequadas dificulta a circulação dos pedestres, obrigando-os a caminhar pela rua e se expor ao risco de acidentes. Os buracos e obstáculos no passeio representam um perigo para os pedestres, aumentando as chances de quedas e lesões. A ausência de sinalização para pedestres confunde os condutores e dificulta a travessia segura das vias, colocando em risco a vida e a integridade física dos pedestres.\n\nÉ urgente que medidas sejam tomadas para tornar a rua um local seguro para caminhar. Os moradores da região estão preocupados com a falta de infraestrutura adequada para os pedestres e pedem que as autoridades competentes realizem os reparos necessários para garantir a segurança e a acessibilidade de todos que circulam pela via. Uma rua segura e acessível é essencial para promover a mobilidade urbana e o bem-estar da comunidade local.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. A melhoria da infraestrutura para pedestres é uma medida simples, mas que tem um impacto significativo na segurança viária e na qualidade de vida dos moradores da região.")
                  .localizacao("Itacurubi - AV. Buriti")
+                 .bairro("Itacurubi")
                  .latitude(-27.5916421583386)
                  .longitude(-48.49706333872131)
                  .categoria(categoriaRepository.findById(9L).get())
@@ -253,6 +571,7 @@ public class StartSeeder implements CommandLineRunner {
                  .titulo("Buraco enorme na calçada")
                  .descricao("Na rua onde moro, há um buraco enorme na calçada que representa um risco para a segurança dos pedestres. O buraco se formou devido ao desgaste do piso e à falta de manutenção da calçada, tornando o local perigoso e intransitável. O buraco é profundo e largo, dificultando a passagem dos pedestres e aumentando as chances de acidentes e lesões.\n\nO buraco na calçada compromete a acessibilidade e a segurança dos pedestres, especialmente de idosos, crianças e pessoas com mobilidade reduzida. A falta de sinalização e proteção ao redor do buraco aumenta o risco de acidentes e quedas, colocando em perigo a vida e a integridade física dos transeuntes. A situação se agravou nos últimos dias, com o aumento do tráfego de pedestres e a falta de reparos na calçada.\n\nÉ urgente que o buraco na calçada seja reparado o mais rápido possível. Os moradores da rua estão preocupados com a situação e pedem que as autoridades competentes realizem os reparos necessários para garantir a segurança e a acessibilidade de todos que circulam pela via. Uma calçada bem conservada é essencial para promover a mobilidade urbana e o bem-estar da comunidade local.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. O reparo do buraco na calçada é uma medida simples, mas que tem um impacto significativo na segurança viária e na qualidade de vida dos moradores da região.")
                  .localizacao("Rua Coronel Maurício Spalding - Santa Monica")
+                 .bairro("Santa Mônica")
                  .latitude(-27.593814473798016)
                  .longitude(-48.50800504391546)
                  .categoria(categoriaRepository.findById(1L).get())
@@ -297,14 +616,14 @@ public class StartSeeder implements CommandLineRunner {
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).dtCriacao(LocalDateTime.now().minusDays(15)).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).dtCriacao(LocalDateTime.now().minusDays(21)).build());
 
       }
 

@@ -14,6 +14,7 @@ public class RegistroMapper {
       dto.setId(entity.getId());
       dto.setTitulo(entity.getTitulo());
       dto.setDescricao(entity.getDescricao());
+      dto.setBairro(entity.getBairro());
       dto.setLocalizacao(entity.getLocalizacao());
       dto.setLatitude(entity.getLatitude());
       dto.setLongitude(entity.getLongitude());
@@ -39,11 +40,11 @@ public class RegistroMapper {
 
       if (entity.getInteracoes() != null) {
          for (Interacao interacao : entity.getInteracoes()) {
-            if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE)) {
+            if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE) && !interacao.getIsDeleted()) {
                interacoesRelevante++;
-            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.IRRELEVANTE)) {
+            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.IRRELEVANTE) && !interacao.getIsDeleted()) {
                interacoesIrrelevante++;
-            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
+            } else if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO) && !interacao.getIsDeleted()) {
                interacoesConcluido++;
             }
          }

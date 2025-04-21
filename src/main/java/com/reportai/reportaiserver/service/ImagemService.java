@@ -31,18 +31,23 @@ public class ImagemService {
    private ImagemRepository repository;
 
    @Autowired
-   private RegistroService registroService;
+   private Validacoes validacoes;
 
    @Value("${gcs.bucket-name}")
    private String bucketName;
 
-   @Autowired
-   private Validacoes validacoes;
-
    @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
    private String googleApplicationCredentials;
 
-   public Imagem save(MultipartFile file, Long idRegistro) throws IOException {
+   /**
+    * Salva uma imagem no Google Cloud Storage e no banco de dados.
+    *
+    * @param file
+    * @param idRegistro
+    * @return imagem salva
+    * @throws IOException
+    */
+   public Imagem salvar(MultipartFile file, Long idRegistro) throws IOException {
 
       validacoes.validarImagem(file);
 
@@ -52,7 +57,7 @@ public class ImagemService {
       validacoes.validarRegistroPertenceUsuario(usuario, idRegistro);
 
 
-      String url = uploadToGCS(file, idRegistro);
+      String url = uploadParaGCS(file, idRegistro);
       Imagem imagem = new Imagem();
       imagem.setCaminho(url);
       imagem.setRegistro(Registro.builder().id(idRegistro).build());
@@ -60,31 +65,51 @@ public class ImagemService {
       return repository.save(imagem);
    }
 
-   public Imagem findById(Long id) {
+   /**
+    * Busca uma imagem por ID.
+    *
+    * @param id ID da imagem a ser buscada
+    * @return imagem encontrada
+    */
+   public Imagem buscarPorId(Long id) {
       return repository.findById(id).orElse(null);
    }
 
-   public List<Imagem> findAll() {
+   /**
+    * Busca todas as imagens.
+    *
+    * @return lista de imagens
+    */
+   public List<Imagem> buscarTodos() {
       return repository.findAll();
    }
 
-   public void deleteById(Long id, Usuario usuario) {
-
-      Imagem imagem = findById(id);
-      if (!imagem.getRegistro().getUsuario().getId().equals(usuario.getId())) {
-         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
-      }
+   /**
+    * Remove uma imagem do Google Cloud Storage e do banco de dados.
+    *
+    * @param imagem
+    */
+   public void remover(Imagem imagem) {
 
       try {
-         deleteFromGCS(imagem.getCaminho());
+         removerDoGCS(imagem.getCaminho());
       } catch (Exception e) {
          throw new CustomException(ErrorDictionary.ERRO_GCS);
       }
 
-      repository.deleteById(id);
+      repository.deleteById(imagem.getId());
    }
 
-   public String uploadToGCS(MultipartFile file, Long idRegistro) throws IOException {
+   /**
+    * Faz o upload de uma imagem para o Google Cloud Storage.
+    * A localização da imagem é definida pelo ID do registro. registros/id_registro=1/uuid
+    *
+    * @param file
+    * @param idRegistro
+    * @return url da imagem no GCS
+    * @throws IOException
+    */
+   public String uploadParaGCS(MultipartFile file, Long idRegistro) throws IOException {
 
       // #ToDo Poderia ser um serice do Google
       Storage storage = StorageOptions
@@ -111,7 +136,13 @@ public class ImagemService {
       return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
    }
 
-   public void deleteFromGCS(String url) throws IOException {
+   /**
+    * Remove uma imagem do Google Cloud Storage.
+    *
+    * @param url URL da imagem a ser removida
+    * @throws IOException
+    */
+   public void removerDoGCS(String url) throws IOException {
       String fileName = url.substring(url.indexOf("registros/"));
       Storage storage = StorageOptions
               .newBuilder()

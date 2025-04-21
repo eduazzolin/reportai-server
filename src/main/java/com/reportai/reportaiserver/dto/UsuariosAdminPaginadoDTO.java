@@ -11,10 +11,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuariosPaginadoDTO {
+public class UsuariosAdminPaginadoDTO {
    private int pagina;
    private int limite;
    private int totalPaginas;
-   private Long totalUsuarios;
-   private List<UsuarioDTO> usuarios;
+   private int totalUsuarios;
+   private List<UsuarioListagemAdminProjection> usuarios;
 }
