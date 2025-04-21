@@ -112,6 +112,15 @@ public class StartSeeder implements CommandLineRunner {
               
               END;
               """);
+
+      jdbcTemplate.execute("SET GLOBAL event_scheduler = ON;");
+      jdbcTemplate.execute("""
+                       CREATE EVENT IF NOT EXISTS EV_CONCLUSAO_AUTOMATICA
+                       ON SCHEDULE EVERY 1 DAY
+                       STARTS TIMESTAMP(CURRENT_DATE, '03:00:00')
+                       DO
+                       CALL SP_CONCLUSAO_AUTOMATICA();
+              """);
    }
 
    private void createProcedureRegistroPorDistancia() {
