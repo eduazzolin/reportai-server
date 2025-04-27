@@ -59,7 +59,7 @@ public class RegistroService {
     * @return registro encontrado
     */
    public Registro buscarPorId(Long id) {
-      Optional<Registro> registro = repository.findById(id);
+      Optional<Registro> registro = repository.findByIdAndIsDeleted(id, false);
       if (registro.isEmpty()) {
          throw new CustomException(ErrorDictionary.REGISTRO_NAO_ENCONTRADO);
       }

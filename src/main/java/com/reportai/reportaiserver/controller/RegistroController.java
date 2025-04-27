@@ -32,6 +32,7 @@ public class RegistroController {
    @Autowired
    private UsuarioService usuarioService;
 
+
    /**
     * Salva um registro no banco de dados.
     *
@@ -41,12 +42,12 @@ public class RegistroController {
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro) {
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
-
       registro.setUsuario(usuarioRequisitante);
       Registro registroSalvo = service.salvar(registro);
       RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
       return ResponseEntity.ok(registroDTO);
    }
+
 
    /**
     * Marca um registro como concluído.
@@ -91,12 +92,7 @@ public class RegistroController {
     * @return lista de registros encontrados em formato DTO
     */
    @GetMapping("/distancia")
-   public ResponseEntity<?> buscarPorDistancia(
-           @RequestParam double latitude,
-           @RequestParam double longitude,
-           @RequestParam double distancia,
-           @RequestParam String filtro,
-           @RequestParam String ordenacao) {
+   public ResponseEntity<?> buscarPorDistancia(@RequestParam double latitude, @RequestParam double longitude, @RequestParam double distancia, @RequestParam String filtro, @RequestParam String ordenacao) {
       int limite = 100;
 
       List<Registro> registros = service.buscarPorDistancia(latitude, longitude, distancia, limite, filtro, ordenacao);
@@ -127,7 +123,7 @@ public class RegistroController {
    }
 
    /**
-    * Busca o DTO do registro por ID.
+    * Busca o DTO do registro por ID. Desconsidera removidos.
     *
     * @param id ID do registro a ser buscado
     * @return
@@ -139,16 +135,17 @@ public class RegistroController {
    }
 
    /**
-    * Busca o registro por ID.
+    * Busca o registro por ID e devolve o objeto completo, para uso de desenvlvimento.
     *
     * @param id ID do registro a ser buscado
-    * @return
+    * @return Registro
     */
    @GetMapping("/dev/{id}")
    public ResponseEntity<Registro> buscarPorId(@PathVariable Long id) {
       Registro registro = service.buscarPorId(id);
       return ResponseEntity.ok(registro);
    }
+
 
    /**
     * Marca um registro como excluído.
@@ -169,6 +166,7 @@ public class RegistroController {
       return ResponseEntity.ok().build();
    }
 
+
    /**
     * Busca os registros para a página de administração.
     * Para mais informações, consulte a procedure SP_ADMIN_LISTAR_REGISTROS.
@@ -184,16 +182,7 @@ public class RegistroController {
     * @return
     */
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarRegistrosAdminPaginadoDTOPorTermo(
-           @RequestParam(defaultValue = "") String idNome,
-           @RequestParam(defaultValue = "0") Long idUsuario,
-           @RequestParam(defaultValue = "0") Long idCategoria,
-           @RequestParam(defaultValue = "") String bairro,
-           @RequestParam(defaultValue = "") String status,
-           @RequestParam int pagina,
-           @RequestParam int limite,
-           @RequestParam(defaultValue = "dtCriacao") String ordenacao) {
-
+   public ResponseEntity<?> buscarRegistrosAdminPaginadoDTOPorTermo(@RequestParam(defaultValue = "") String idNome, @RequestParam(defaultValue = "0") Long idUsuario, @RequestParam(defaultValue = "0") Long idCategoria, @RequestParam(defaultValue = "") String bairro, @RequestParam(defaultValue = "") String status, @RequestParam int pagina, @RequestParam int limite, @RequestParam(defaultValue = "dtCriacao") String ordenacao) {
 
       Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
 
@@ -201,17 +190,7 @@ public class RegistroController {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
 
-      RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.buscarRegistrosAdminpaginadoDTOPorTermos(
-              idNome,
-              idUsuario,
-              idCategoria,
-              bairro,
-              status,
-              pagina,
-              limite,
-              ordenacao);
-
-
+      RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.buscarRegistrosAdminpaginadoDTOPorTermos(idNome, idUsuario, idCategoria, bairro, status, pagina, limite, ordenacao);
       return ResponseEntity.ok(registrosAdminPaginadoDTO);
    }
 
