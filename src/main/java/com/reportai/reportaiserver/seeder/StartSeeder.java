@@ -150,9 +150,9 @@ public class StartSeeder implements CommandLineRunner {
                                      BEGIN
               
                                          /*
-                                          * esta CTE desconsidera registros que estão fora do raio `p_distancia`
-                                          * aplica o filtro de `p_filtro`
-                                          * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância
+                                          * esta CTE desconsidera registros que estão fora do raio `p_distancia`, aplica o filtro de `p_filtro`
+                                          * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância.
+                                          * a distância é calculada através da formula da distância euclidiana.
                                           */
                                          SET @REGISTROS_LIMITADOS_POR_DISTANCIA = CONCAT(
                                                  ', REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',

@@ -208,6 +208,12 @@ public class RegistroService {
 
    }
 
+   /**
+    * Busca a data de conclusão programada de um registro específico.
+    *
+    * @param id ID do registro
+    * @return LocalDateTime da conclusão programada ou null se não houver
+    */
    public LocalDateTime buscarDtConclusaoProgramadaPorId(Long id) {
       Registro registro = buscarPorId(id);
       ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);
