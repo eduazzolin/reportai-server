@@ -59,7 +59,7 @@ public class RegistroService {
     * @return registro encontrado
     */
    public Registro buscarPorId(Long id) {
-      Optional<Registro> registro = repository.findById(id);
+      Optional<Registro> registro = repository.findByIdAndIsDeleted(id, false);
       if (registro.isEmpty()) {
          throw new CustomException(ErrorDictionary.REGISTRO_NAO_ENCONTRADO);
       }
@@ -150,6 +150,10 @@ public class RegistroService {
     */
    public void concluirPorId(Registro registro) {
 
+      if (registro.getIsConcluido()) {
+         throw new CustomException(ErrorDictionary.REGISTRO_JA_CONCLUIDO);
+      }
+
       removerConclusaoProgramada(registro);
 
       registro.setIsConcluido(true);
@@ -204,6 +208,12 @@ public class RegistroService {
 
    }
 
+   /**
+    * Busca a data de conclusão programada de um registro específico.
+    *
+    * @param id ID do registro
+    * @return LocalDateTime da conclusão programada ou null se não houver
+    */
    public LocalDateTime buscarDtConclusaoProgramadaPorId(Long id) {
       Registro registro = buscarPorId(id);
       ConclusaoProgramada conclusaoProgramada = conclusaoProgramadaRepository.findByRegistroAndRemovidaEm(registro, null);

@@ -71,7 +71,7 @@ public class OpenAIService {
          requestBody.put("temperature", 0.0);
 
 
-         // estrutura do response format 🙄
+         // estrutura do response format
          Map<String, Object> responseFormat = new HashMap<>();
          responseFormat.put("type", "json_schema");
 

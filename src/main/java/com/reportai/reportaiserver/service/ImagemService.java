@@ -51,11 +51,6 @@ public class ImagemService {
 
       validacoes.validarImagem(file);
 
-      // #ToDo #SpringSecurity #Validar se o registro pertence ao usuário logado
-      Usuario usuario = new Usuario();
-      usuario.setId(2L);
-      validacoes.validarRegistroPertenceUsuario(usuario, idRegistro);
-
 
       String url = uploadParaGCS(file, idRegistro);
       Imagem imagem = new Imagem();

@@ -3,8 +3,10 @@ package com.reportai.reportaiserver.controller;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.model.Imagem;
+import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.ImagemService;
+import com.reportai.reportaiserver.service.RegistroService;
 import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,9 @@ public class ImagemController {
 
    @Autowired
    private UsuarioService usuarioService;
+
+   @Autowired
+   private RegistroService registroService;
 
 
    /**
@@ -67,7 +72,7 @@ public class ImagemController {
    }
 
    /**
-    * Salva uma imagem no banco de dados.
+    * Salva uma imagem no banco de dados e no Google Cloud Storage.
     *
     * @param file
     * @param idRegistro
@@ -76,6 +81,12 @@ public class ImagemController {
     */
    @PostMapping
    public ResponseEntity<Imagem> salvar(@RequestParam("file") MultipartFile file, @RequestParam("idRegistro") Long idRegistro) throws IOException {
+      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+      Registro registro = registroService.buscarPorId(idRegistro);
+
+      if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
 
       Imagem imagemSalva = service.salvar(file, idRegistro);
       return ResponseEntity.ok(imagemSalva);

@@ -112,6 +112,15 @@ public class StartSeeder implements CommandLineRunner {
               
               END;
               """);
+
+      jdbcTemplate.execute("SET GLOBAL event_scheduler = ON;");
+      jdbcTemplate.execute("""
+                       CREATE EVENT IF NOT EXISTS EV_CONCLUSAO_AUTOMATICA
+                       ON SCHEDULE EVERY 1 DAY
+                       STARTS TIMESTAMP(CURRENT_DATE, '03:00:00')
+                       DO
+                       CALL SP_CONCLUSAO_AUTOMATICA();
+              """);
    }
 
    private void createProcedureRegistroPorDistancia() {
@@ -139,16 +148,11 @@ public class StartSeeder implements CommandLineRunner {
                                          IN p_ordenacao VARCHAR(255)
                                      )
                                      BEGIN
-                                        /*
-                                         * esta CTE calcula as interações do tipo RELEVANTE por registro
-                                         */
-                                          SET @INTERACOES_RELEVANTES = ' WITH INTERACOES_RELEVANTES AS (SELECT ID_REGISTRO, COUNT(ID) AS interacoesRelevante FROM INTERACAO WHERE TIPO = ''RELEVANTE'' GROUP BY ID_REGISTRO ) ';
-              
               
                                          /*
-                                          * esta CTE desconsidera registros que estão fora do raio `p_distancia`
-                                          * aplica o filtro de `p_filtro`
-                                          * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância
+                                          * esta CTE desconsidera registros que estão fora do raio `p_distancia`, aplica o filtro de `p_filtro`
+                                          * e ainda limita a quantidade de registros baseado em `p_limite` por ordem de distância.
+                                          * a distância é calculada através da formula da distância euclidiana.
                                           */
                                          SET @REGISTROS_LIMITADOS_POR_DISTANCIA = CONCAT(
                                                  ', REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
@@ -159,6 +163,12 @@ public class StartSeeder implements CommandLineRunner {
                                                  '                                                ', p_filtro,
                                                  '                                           ORDER BY distancia_do_centro ASC',
                                                  '                                           LIMIT ', p_limite, ')');
+              
+              
+                                        /*
+                                         * esta CTE calcula as interações do tipo RELEVANTE por registro, serve para ordenar depois
+                                         */
+                                         SET @INTERACOES_RELEVANTES = ' WITH INTERACOES_RELEVANTES AS (SELECT ID_REGISTRO, COUNT(ID) AS interacoesRelevante FROM INTERACAO WHERE TIPO = ''RELEVANTE'' GROUP BY ID_REGISTRO ) ';
               
               
                                          /*
@@ -384,10 +394,13 @@ public class StartSeeder implements CommandLineRunner {
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_RELATORIO_BAIRRO(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
-                  SELECT BAIRRO, COUNT(*) AS QUANTIDADE
+                  SELECT 
+                      BAIRRO,
+                      SUM(CASE WHEN IS_CONCLUIDO THEN 1 ELSE 0 END) AS CONCLUIDO,
+                      SUM(CASE WHEN IS_CONCLUIDO THEN 0 ELSE 1 END) AS ATIVO,
+                      COUNT(*) AS QUANTIDADE
                   FROM REGISTRO
                   WHERE NOT IS_DELETED
-                    AND NOT IS_CONCLUIDO
                     AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY BAIRRO
                   ORDER BY QUANTIDADE DESC;
@@ -396,11 +409,14 @@ public class StartSeeder implements CommandLineRunner {
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_RELATORIO_CATEGORIA(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
-                  SELECT C.NOME AS CATEGORIA, COUNT(*) QUANTIDADE
+                  SELECT 
+                      C.NOME AS CATEGORIA,
+                      SUM(CASE WHEN IS_CONCLUIDO THEN 1 ELSE 0 END) AS CONCLUIDO,
+                      SUM(CASE WHEN IS_CONCLUIDO THEN 0 ELSE 1 END) AS ATIVO,
+                      COUNT(*) AS QUANTIDADE
                   FROM REGISTRO R
                            LEFT JOIN CATEGORIA C ON C.ID = R.categoria_id
                   WHERE NOT R.IS_DELETED
-                    AND NOT R.IS_CONCLUIDO
                     AND  CAST(R.DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY C.NOME
                   ORDER BY QUANTIDADE DESC;
@@ -422,13 +438,17 @@ public class StartSeeder implements CommandLineRunner {
    private void loadCategoria() {
       if (categoriaRepository.count() == 0) {
          categoriaRepository.save(Categoria.builder().nome("Buraco na rua").icone("/markers/street.svg").isDeleted(false).build());
-         categoriaRepository.save(Categoria.builder().nome("Lâmpada queimada").icone("/markers/traffic-light.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Calçada danificada").icone("/markers/path.svg").isDeleted(false).build());
-         categoriaRepository.save(Categoria.builder().nome("Poda de árvore").icone("/markers/tree.svg").isDeleted(false).build());
-         categoriaRepository.save(Categoria.builder().nome("Vazamento de água").icone("/markers/flood.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Lâmpada queimada").icone("/markers/light.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Árvore no caminho").icone("/markers/tree.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Sinalização de trânsito").icone("/markers/traffic-sign.svg").isDeleted(false).build());
-         categoriaRepository.save(Categoria.builder().nome("Poluição sonora").icone("/markers/traffic-sign.svg").isDeleted(false).build());
-         categoriaRepository.save(Categoria.builder().nome("Lixo acumulado").icone("/markers/traffic-sign.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Vazamento de água").icone("/markers/flood.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Alagamento").icone("/markers/flood.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Lixo acumulado").icone("/markers/trash.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Problema de segurança").icone("/markers/safe.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Problema de esgoto").icone("/markers/sewage.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Engarrafamento constante").icone("/markers/traffic-jam.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Poluição sonora").icone("/markers/noise.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Outros").icone("/markers/general.svg").isDeleted(false).build());
          ;
       }
@@ -466,7 +486,7 @@ public class StartSeeder implements CommandLineRunner {
                  .latitude(-27.57841321989771)
                  .longitude(-48.538419398201704)
                  .bairro("Agronômica")
-                 .categoria(categoriaRepository.findById(2L).get())
+                 .categoria(categoriaRepository.findById(3L).get())
                  .isConcluido(true)
                  .dtConclusao(java.time.LocalDateTime.now())
                  .isDeleted(false)
@@ -480,7 +500,7 @@ public class StartSeeder implements CommandLineRunner {
                  .bairro("Centro")
                  .latitude(-27.590744088315592)
                  .longitude(-48.55018902283705)
-                 .categoria(categoriaRepository.findById(3L).get())
+                 .categoria(categoriaRepository.findById(2L).get())
                  .isConcluido(false)
                  .isDeleted(false)
                  .usuario(usuarioRepository.findById(4L).get())
@@ -506,7 +526,7 @@ public class StartSeeder implements CommandLineRunner {
                  .bairro("Centro")
                  .latitude(-27.595356626042015)
                  .longitude(-48.55304630289941)
-                 .categoria(categoriaRepository.findById(5L).get())
+                 .categoria(categoriaRepository.findById(6L).get())
                  .isConcluido(false)
                  .isDeleted(false)
                  .usuario(usuarioRepository.findById(5L).get())
@@ -519,7 +539,7 @@ public class StartSeeder implements CommandLineRunner {
                  .bairro("Canasvieiras")
                  .latitude(-27.429936753773585)
                  .longitude(-48.45811156129758)
-                 .categoria(categoriaRepository.findById(6L).get())
+                 .categoria(categoriaRepository.findById(5L).get())
                  .isConcluido(false)
                  .isDeleted(false)
                  .usuario(usuarioRepository.findById(2L).get())
@@ -533,7 +553,7 @@ public class StartSeeder implements CommandLineRunner {
                  .bairro("Jurerê Internacional")
                  .latitude(-27.441071927510585)
                  .longitude(-48.50369053721775)
-                 .categoria(categoriaRepository.findById(7L).get())
+                 .categoria(categoriaRepository.findById(12L).get())
                  .isConcluido(false)
                  .isDeleted(false)
                  .usuario(usuarioRepository.findById(3L).get())
@@ -555,7 +575,7 @@ public class StartSeeder implements CommandLineRunner {
 
          registroRepository.save(Registro.builder()
                  .titulo("Local perigoso para caminhar")
-                 .descricao("A rua onde moro está se tornando um local perigoso para caminhar. A falta de calçadas adequadas, a presença de buracos e obstáculos no passeio, e a ausência de sinalização para pedestres comprometem a segurança e a acessibilidade dos pedestres que circulam pela região. A rua se tornou um ambiente hostil e inseguro para os pedestres, especialmente para idosos, crianças e pessoas com mobilidade reduzida.\n\nA falta de calçadas adequadas dificulta a circulação dos pedestres, obrigando-os a caminhar pela rua e se expor ao risco de acidentes. Os buracos e obstáculos no passeio representam um perigo para os pedestres, aumentando as chances de quedas e lesões. A ausência de sinalização para pedestres confunde os condutores e dificulta a travessia segura das vias, colocando em risco a vida e a integridade física dos pedestres.\n\nÉ urgente que medidas sejam tomadas para tornar a rua um local seguro para caminhar. Os moradores da região estão preocupados com a falta de infraestrutura adequada para os pedestres e pedem que as autoridades competentes realizem os reparos necessários para garantir a segurança e a acessibilidade de todos que circulam pela via. Uma rua segura e acessível é essencial para promover a mobilidade urbana e o bem-estar da comunidade local.\n\nA comunidade espera uma resposta rápida e eficaz para este problema. A melhoria da infraestrutura para pedestres é uma medida simples, mas que tem um impacto significativo na segurança viária e na qualidade de vida dos moradores da região.")
+                 .descricao("A rua onde moro está se tornando um local extremamente perigoso para caminhar devido ao aumento de assaltos e outros crimes. A falta de iluminação pública adequada e o baixo movimento de pessoas tornam o ambiente propício para ações criminosas, colocando em risco a segurança de quem precisa transitar pela região.Muitos moradores relatam ter sido vítimas de roubos e furtos, principalmente no início da manhã e à noite. A sensação de insegurança é constante, e caminhar pela avenida tornou-se uma atividade arriscada, especialmente para idosos, crianças e pessoas que circulam sozinhas.\n\nA ausência de policiamento ostensivo e a presença de áreas mal iluminadas favorecem a atuação de criminosos, que aproveitam a vulnerabilidade dos pedestres. Isso tem gerado medo e restringido o direito de ir e vir dos moradores, prejudicando a qualidade de vida e a mobilidade na região.É urgente que medidas sejam tomadas para aumentar a segurança pública no local. Os moradores da região pedem patrulhamento mais frequente, instalação de câmeras de vigilância e melhorias na iluminação para coibir as ações criminosas e garantir a segurança de todos.\n\nA comunidade espera uma resposta rápida e eficaz das autoridades competentes. Um ambiente seguro é essencial para promover o bem-estar e a tranquilidade dos moradores e visitantes da região.")
                  .localizacao("Itacurubi - AV. Buriti")
                  .bairro("Itacurubi")
                  .latitude(-27.5916421583386)
@@ -574,7 +594,7 @@ public class StartSeeder implements CommandLineRunner {
                  .bairro("Santa Mônica")
                  .latitude(-27.593814473798016)
                  .longitude(-48.50800504391546)
-                 .categoria(categoriaRepository.findById(1L).get())
+                 .categoria(categoriaRepository.findById(2L).get())
                  .isConcluido(false)
                  .isDeleted(false)
                  .usuario(usuarioRepository.findById(2L).get())
@@ -585,16 +605,51 @@ public class StartSeeder implements CommandLineRunner {
    private void loadImagem() {
       if (imagemRepository.count() == 0) {
 
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D4/de348b2c-d602-4064-8718-1127ed133675").registro(registroRepository.findById(10L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D1/6b2c60c6-02fb-4cda-85b3-30f471720e1f").registro(registroRepository.findById(9L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D1/e394123d-a84a-41d5-8ef6-3eaf68b1b59d").registro(registroRepository.findById(3L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D10/0eb9e70f-eb0d-43db-a1eb-e1c0d4dedba3").registro(registroRepository.findById(4L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D10/d98fa2ac-a31e-458b-a9d5-9043e1c86349").registro(registroRepository.findById(5L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D10/f8fc3d0e-a012-442f-a4de-81b91e2663e8").registro(registroRepository.findById(6L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D4/90c58f98-76db-4fa9-b558-4af103ff6646").registro(registroRepository.findById(7L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D4/a4e2d8b0-f13f-418f-98f5-0a059c5064dd").registro(registroRepository.findById(8L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D1/51f27fe7-efc5-4aa3-8914-1284264ec4fc").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/id_registro%3D6/20b345a6-5bea-460d-b07b-e079549c0d59").registro(registroRepository.findById(1L).get()).build());
+         // placeholder padrao
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/566a6405-f41c-44f8-9180-95ae776beaf8").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/9bdd15b3-9340-4503-9d8e-fbf841f5628d").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/f4bf4716-cfeb-4264-a7a8-183814085bac").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/14acf4e4-1c78-4614-819e-49e9618d5faa").registro(registroRepository.findById(2L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/eee24435-7050-40b8-89d8-16646120f11c").registro(registroRepository.findById(2L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/31732c87-6c2e-4118-a8b2-9884f6bafbbb").registro(registroRepository.findById(3L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/ebe19c33-2d84-402e-ae14-b8c85fd38384").registro(registroRepository.findById(4L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/5801c9d1-15bb-4465-9c58-8a655015e7db").registro(registroRepository.findById(5L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/bfb31e36-b073-40fa-aa05-6576525193a4").registro(registroRepository.findById(5L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/9e2e9980-91ad-49f7-a5c7-fec4d6675e25").registro(registroRepository.findById(6L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/c679dad0-4b87-426c-93bd-d992bd82a256").registro(registroRepository.findById(6L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/547d9e77-a932-45a7-b536-8d8e3608c6b6").registro(registroRepository.findById(7L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/c93cbbb3-ab2e-4026-927f-177d32cd5d02").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/ec7ad7ea-f994-4d60-adc3-a10e5c589743").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/7121413e-0148-4dde-b317-eff918aaf8f4").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/fd2b6c07-ce31-4f9b-97ca-ed0c989960f7").registro(registroRepository.findById(9L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/f5103477-fdaf-4fa3-b3c8-9fa6aba9acdf").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/88c9351a-52d2-49ab-82c5-4ecbc41c2f72").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/17e70737-bff7-4249-9209-029dfffffdc6").registro(registroRepository.findById(10L).get()).build());
+
+         // placeholder dibea
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/08952904-1f3a-44e3-9408-3c3c07f2d40b").registro(registroRepository.findById(1L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/1dcc4ff2-f4c4-45c3-ad06-507c22c39971").registro(registroRepository.findById(1L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/305bd8fe-dcea-444e-9fcd-425048474952").registro(registroRepository.findById(1L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/306b65d8-b40c-4e12-b5aa-87066976b69d").registro(registroRepository.findById(2L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/33960843-2599-45f9-90fe-c1abcd14111a").registro(registroRepository.findById(2L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/33f6ffa2-9f9c-4291-b7a7-99615f9eac04").registro(registroRepository.findById(3L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ad40b688-f7e0-41b8-a67a-c016df5abfb5").registro(registroRepository.findById(4L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/af77bfcb-d957-42ba-b70f-93b9ed7cf8a6").registro(registroRepository.findById(4L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/378e8685-29dc-43fd-911e-326f51e401fb").registro(registroRepository.findById(4L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/4b02f949-cbba-45a0-9de4-72bd45e16a7e").registro(registroRepository.findById(5L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/4b4d9bc8-a337-4784-a618-1ba6e8329ca5").registro(registroRepository.findById(5L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/5194bdbd-bb82-4fa7-91ac-02515551007c").registro(registroRepository.findById(6L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/5b3a0969-833b-4ba2-880d-5d3b0bcba9d9").registro(registroRepository.findById(6L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/72f64e42-4ccd-4544-9d68-19c83f3a653a").registro(registroRepository.findById(7L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/d0a21b7e-b5fd-40eb-be1a-ad3d1c8a2cdb").registro(registroRepository.findById(7L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/bebf81de-7e13-4528-8287-462aeeb9345f").registro(registroRepository.findById(8L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ca152612-b14b-47f8-a914-3f60321e97a8").registro(registroRepository.findById(8L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ce462f9e-0175-426b-afa1-51220e763399").registro(registroRepository.findById(8L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/f8cc64b4-4de3-4339-acb2-056392e2659f").registro(registroRepository.findById(9L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/d2153759-a1f0-4134-a18a-062c99de8648").registro(registroRepository.findById(10L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/e827a889-5ca3-4e4b-9edd-fb8c84e44ac9").registro(registroRepository.findById(10L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/f8cc64b4-4de3-4339-acb2-056392e2659f").registro(registroRepository.findById(10L).get()).build());
+
 
       }
 

@@ -163,15 +163,6 @@ public class Validacoes {
 
    }
 
-   public void validarRegistroPertenceUsuario(Usuario usuario, Long idRegistro) {
-
-      Registro registro = registroRepository.findById(idRegistro).get();
-      if (!registro.getUsuario().getId().equals(usuario.getId())) {
-         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
-      }
-
-   }
-
    public void validarInteracao(Interacao interacao) {
       // usuario
       if (interacao.getUsuario() == null || interacao.getUsuario().getId() == null) {
