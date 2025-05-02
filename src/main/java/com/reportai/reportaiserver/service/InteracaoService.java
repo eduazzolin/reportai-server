@@ -93,18 +93,21 @@ public class InteracaoService {
    public InteracaoRegistroSimplesDTO buscarDTORegistroSimplesPorRegistroEUsuario(Registro registro, Usuario usuario) {
       InteracaoRegistroSimplesDTO dto = new InteracaoRegistroSimplesDTO();
       dto.setIdRegistro(registro.getId());
-      dto.setIdUsuario(usuario.getId());
       dto.setQtRelevante(repository.countByRegistroAndTipoAndIsDeleted(registro, Interacao.TipoInteracao.RELEVANTE, false));
       dto.setQtIrrelevante(repository.countByRegistroAndTipoAndIsDeleted(registro, Interacao.TipoInteracao.IRRELEVANTE, false));
       dto.setQtConcluido(repository.countByRegistroAndTipoAndIsDeleted(registro, Interacao.TipoInteracao.CONCLUIDO, false));
 
-      Interacao interacaoRelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.RELEVANTE, usuario, false);
-      Interacao interacaoIrrelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.IRRELEVANTE, usuario, false);
-      Interacao interacaoConcluido = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.CONCLUIDO, usuario, false);
+      if (usuario != null) {
+         dto.setIdUsuario(usuario.getId());
+         Interacao interacaoRelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.RELEVANTE, usuario, false);
+         Interacao interacaoIrrelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.IRRELEVANTE, usuario, false);
+         Interacao interacaoConcluido = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.CONCLUIDO, usuario, false);
 
-      dto.setUsuarioInteracaoIdRelevante(interacaoRelevante != null ? interacaoRelevante.getId() : null);
-      dto.setUsuarioInteracaoIdIrrelevante(interacaoIrrelevante != null ? interacaoIrrelevante.getId() : null);
-      dto.setUsuarioInteracaoIdConcluido(interacaoConcluido != null ? interacaoConcluido.getId() : null);
+         dto.setUsuarioInteracaoIdRelevante(interacaoRelevante != null ? interacaoRelevante.getId() : null);
+         dto.setUsuarioInteracaoIdIrrelevante(interacaoIrrelevante != null ? interacaoIrrelevante.getId() : null);
+         dto.setUsuarioInteracaoIdConcluido(interacaoConcluido != null ? interacaoConcluido.getId() : null);
+      }
+
       return dto;
    }
 }

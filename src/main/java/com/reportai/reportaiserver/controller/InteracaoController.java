@@ -7,8 +7,8 @@ import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.InteracaoService;
+import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.RegistroService;
-import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,10 +28,11 @@ public class InteracaoController {
    private RegistroService registroService;
 
    @Autowired
-   private UsuarioService usuarioService;
+   private JwtService jwtService;
 
    /**
     * Busca todas as interações do tipo relevante por registro.
+    * Este endpoint é ABERTO.
     *
     * @param idRegistro ID do registro
     * @return lista de interações relevantes em formato DTO
@@ -51,9 +52,9 @@ public class InteracaoController {
     * @return InteracaoRegistroSimplesDTO com as informações do registro e do usuário
     */
    @GetMapping("/{idRegistro}")
-   public ResponseEntity<?> buscarInteracaoRegistroSimplesDTOPorIdRegistro(@PathVariable Long idRegistro) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> buscarInteracaoRegistroSimplesDTOPorIdRegistro(@PathVariable Long idRegistro, @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
       Registro registro = registroService.buscarPorId(idRegistro);
+      Usuario usuarioRequisitante = authorizationHeader != null ? jwtService.obterUsuarioRequisitante(authorizationHeader) : null;
       InteracaoRegistroSimplesDTO interacaoRegistroSimplesDTO = service.buscarDTORegistroSimplesPorRegistroEUsuario(registro, usuarioRequisitante);
       return ResponseEntity.ok(interacaoRegistroSimplesDTO);
    }
@@ -65,8 +66,8 @@ public class InteracaoController {
     * @return interacao salva
     */
    @PostMapping()
-   public ResponseEntity<?> salvar(@RequestBody Interacao interacao) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> salvar(@RequestBody Interacao interacao, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       interacao.setUsuario(usuarioRequisitante);
       return ResponseEntity.ok(service.salvar(interacao));
    }
@@ -78,9 +79,8 @@ public class InteracaoController {
     * @return Resposta HTTP 200 OK
     */
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> remover(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
-
+   public ResponseEntity<?> remover(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       Interacao interacao = service.buscarPorId(id);
 
       if (!interacao.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {

@@ -21,6 +21,12 @@ public class RelatorioPublicoController {
    @Autowired
    private RegistroRepository registroRepository;
 
+   /**
+    * Gera um relatório de registros por status. Este endpoint é ABERTO.
+    * @param dataInicio
+    * @param dataFim
+    * @return RelatorioStatusProjection
+    */
    @GetMapping("/status")
    public ResponseEntity<List<RelatorioStatusProjection>> relatorioStatus(
            @RequestParam(defaultValue = "1999-01-01") String dataInicio,
@@ -29,6 +35,12 @@ public class RelatorioPublicoController {
       return ResponseEntity.ok(registroRepository.generateRelatorioStatus(dataInicio, dataFim));
    }
 
+   /**
+    * Gera um relatório de registros por bairro. Este endpoint é ABERTO.
+    * @param dataInicio
+    * @param dataFim
+    * @return RelatorioBairroProjection
+    */
    @GetMapping("/bairro")
    public ResponseEntity<?> relatorioBairro(
            @RequestParam(defaultValue = "1999-01-01") String dataInicio,
@@ -37,6 +49,12 @@ public class RelatorioPublicoController {
       return ResponseEntity.ok(registroRepository.generateRelatorioBairro(dataInicio, dataFim));
    }
 
+   /**
+    * Gera um relatório de registros por categoria. Este endpoint é ABERTO.
+    * @param dataInicio
+    * @param dataFim
+    * @return RelatorioCategoriaProjection
+    */
    @GetMapping("/categoria")
    public ResponseEntity<?> relatorioCategoria(
            @RequestParam(defaultValue = "1999-01-01") String dataInicio,

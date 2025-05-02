@@ -6,8 +6,8 @@ import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.ImagemService;
+import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.RegistroService;
-import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,22 +24,13 @@ public class ImagemController {
    @Autowired
    private ImagemService service;
 
-   @Autowired
-   private UsuarioService usuarioService;
 
    @Autowired
    private RegistroService registroService;
 
+   @Autowired
+   private JwtService jwtService;
 
-   /**
-    * Busca todas as imagens do banco de dados.
-    *
-    * @return lista de imagens
-    */
-   @GetMapping
-   public ResponseEntity<?> buscarTodos() {
-      return ResponseEntity.ok(service.buscarTodos());
-   }
 
    /**
     * Busca uma imagem por ID.
@@ -59,8 +50,8 @@ public class ImagemController {
     * @return Resposta HTTP 200 OK
     */
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> removerPorId(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> removerPorId(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       Imagem imagem = service.buscarPorId(id);
 
       if (!imagem.getRegistro().getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
@@ -80,8 +71,8 @@ public class ImagemController {
     * @throws IOException
     */
    @PostMapping
-   public ResponseEntity<Imagem> salvar(@RequestParam("file") MultipartFile file, @RequestParam("idRegistro") Long idRegistro) throws IOException {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<Imagem> salvar(@RequestParam("file") MultipartFile file, @RequestParam("idRegistro") Long idRegistro, @RequestHeader("Authorization") String authorizationHeader) throws IOException {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       Registro registro = registroService.buscarPorId(idRegistro);
 
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {

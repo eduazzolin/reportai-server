@@ -6,6 +6,7 @@ import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.model.Usuario;
+import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,25 @@ public class UsuarioController {
 
    @Autowired
    private UsuarioService service;
+
    @Autowired
    private UsuarioService usuarioService;
 
-   @PostMapping
-   public ResponseEntity<?> salvar(@RequestBody Usuario usuario) {
+   @Autowired
+   private JwtService jwtService;
 
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+
+   /**
+    * Salva um usuário no banco de dados. Este endpoint é ABERTO.
+    *
+    * @param usuario
+    * @param authorizationHeader
+    * @return
+    */
+   @PostMapping
+   public ResponseEntity<?> salvar(@RequestBody Usuario usuario, @RequestHeader("Authorization") String authorizationHeader) {
+
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
 
       if (usuario.getId() != null) {
 
@@ -49,45 +62,86 @@ public class UsuarioController {
       return ResponseEntity.ok(usuarioSalvo);
    }
 
+
+   /**
+    * Remove um usuário do banco de dados.
+    *
+    * @param id                  ID do usuário a ser removido
+    * @param authorizationHeader
+    * @return Resposta HTTP 200 OK
+    */
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> deletar(@PathVariable Long id) {
+   public ResponseEntity<?> deletar(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      if (!usuarioRequisitante.getId().equals(id) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
       service.removerPorId(id);
       return ResponseEntity.ok().build();
    }
 
 
+   /**
+    * Autentica um usuário no sistema. Este endpoint é ABERTO.
+    *
+    * @param usuario
+    * @return TokenDTO com o token JWT gerado
+    */
    @PostMapping("/autenticar")
    public ResponseEntity<?> autenticar(@RequestBody Usuario usuario) {
       Usuario usuarioAutenticado = service.autenticar(usuario.getEmail(), usuario.getSenha());
-      // TokenDTO tokenDTO = new TokenDTO(usurioAutenticado.getNome(), jwtService.generateToken(usurioAutenticado)); #ToDo #SpringSecurity
-      LocalDateTime dataExp = LocalDateTime.now().plusMinutes(999);
-      TokenDTO tokenDTO = new TokenDTO(
-              usuarioAutenticado.getId(),
-              dataExp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-              usuarioAutenticado.getNome(),
-              "token_placeholder");
+      LocalDateTime dataExpiracao = jwtService.gerarDataExpiracao();
+
+      TokenDTO tokenDTO = TokenDTO
+              .builder()
+              .id(usuarioAutenticado.getId())
+              .nomeUsuario(usuarioAutenticado.getNome())
+              .token(jwtService.gerarToken(usuarioAutenticado))
+              .horaExpiracao(dataExpiracao.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+              .build();
+
       return ResponseEntity.ok(tokenDTO);
    }
 
+
+   /**
+    * Busca um usuário por ID. Só o próprio usuário ou um ADMIN pode buscar o usuário.
+    *
+    * @param id                  ID do usuário a ser buscado
+    * @param authorizationHeader
+    * @return UsuárioDTO
+    */
    @GetMapping("/{id}")
-   public ResponseEntity<?> buscarDTOPorId(@PathVariable Long id) {
+   public ResponseEntity<?> buscarDTOPorId(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      if (!usuarioRequisitante.getId().equals(id) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
       UsuarioDTO usuario = service.buscarDTOPorId(id);
       return ResponseEntity.ok(usuario);
    }
 
 
+   /**
+    * Busca a listagem de usuários paginada. Somente um ADMIN pode acessar este endpoint.
+    *
+    * @param pagina
+    * @param limite
+    * @param termo
+    * @param ordenacao
+    * @param authorizationHeader
+    * @return UsuariosAdminPaginadoDTO
+    */
    @GetMapping("/admin")
    public ResponseEntity<?> buscarPorTermo(
            @RequestParam int pagina,
            @RequestParam int limite,
            @RequestParam String termo,
-           @RequestParam String ordenacao) {
+           @RequestParam String ordenacao,
+           @RequestHeader("Authorization") String authorizationHeader) {
 
-      Usuario usuario = usuarioService.buscarAtivosPorId(2L); // #ToDo #SpringSecurity
-
-      if (!(usuario.getRole().equals(Usuario.Roles.ADMIN))) {
-         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
-      }
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);
 
       UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, ordenacao);
       return ResponseEntity.ok(usuariosAdminPaginadoDTO);

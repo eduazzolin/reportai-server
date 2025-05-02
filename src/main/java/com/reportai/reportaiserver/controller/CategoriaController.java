@@ -1,7 +1,9 @@
 package com.reportai.reportaiserver.controller;
 
 import com.reportai.reportaiserver.model.Categoria;
+import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.CategoriaService;
+import com.reportai.reportaiserver.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,42 +17,35 @@ public class CategoriaController {
    @Autowired
    private CategoriaService service;
 
+   @Autowired
+   private JwtService jwtService;
+
    @PostMapping
-   public ResponseEntity<?> salvar(@RequestBody Categoria categoria) {
-      try {
-         Categoria categoriaSalvo = service.salvar(categoria);
-         return ResponseEntity.ok(categoriaSalvo);
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+   public ResponseEntity<?> salvar(@RequestBody Categoria categoria, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);
+
+      Categoria categoriaSalvo = service.salvar(categoria);
+      return ResponseEntity.ok(categoriaSalvo);
    }
 
    @GetMapping
    public ResponseEntity<?> buscarTodos() {
-      try {
-         return ResponseEntity.ok(service.buscarTodos());
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      return ResponseEntity.ok(service.buscarTodos());
    }
 
    @GetMapping("/{id}")
    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
-      try {
-         return ResponseEntity.ok(service.buscarPorId(id));
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+      return ResponseEntity.ok(service.buscarPorId(id));
    }
 
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> removerPorId(@PathVariable Long id) {
-      try {
-         service.removerPorId(id);
-         return ResponseEntity.ok().build();
-      } catch (Exception e) {
-         return ResponseEntity.badRequest().body(e.getMessage());
-      }
+   public ResponseEntity<?> removerPorId(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);
+
+      service.removerPorId(id);
+      return ResponseEntity.ok().build();
    }
 
 
