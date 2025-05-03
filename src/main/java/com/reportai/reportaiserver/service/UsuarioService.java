@@ -29,10 +29,6 @@ public class UsuarioService {
 
    public Usuario salvar(Usuario usuario) {
       validacoes.validarUsuario(usuario);
-      usuario.setRole(USUARIO);
-      if (usuario.getId() != null) {
-         usuario.setCpf(repository.findById(usuario.getId()).get().getCpf());
-      }
       return repository.save(usuario);
    }
 

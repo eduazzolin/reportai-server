@@ -54,6 +54,8 @@ public class UsuarioController {
             usuarioExistente.setSenha(usuario.getSenha());
          }
          usuario = usuarioExistente;
+      } else {
+         usuario.setRole(Usuario.Roles.USUARIO);
       }
       Usuario usuarioSalvo = service.salvar(usuario);
       return ResponseEntity.ok(UsuarioMapper.toDTO(usuarioSalvo));

@@ -32,10 +32,6 @@ public class Validacoes {
    private InteracaoRepository interacaoRepository;
 
    public static boolean validarCPF(String cpf) {
-      if (0 == 0) {
-         return true; //TODO dev
-      }
-
       if (cpf == null) {
          return false;
       }
