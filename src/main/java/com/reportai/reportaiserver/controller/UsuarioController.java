@@ -5,6 +5,7 @@ import com.reportai.reportaiserver.dto.UsuarioDTO;
 import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.UsuarioService;
@@ -25,30 +26,26 @@ public class UsuarioController {
    private UsuarioService service;
 
    @Autowired
-   private UsuarioService usuarioService;
-
-   @Autowired
    private JwtService jwtService;
 
 
    /**
-    * Salva um usuário no banco de dados. Este endpoint é ABERTO.
+    * Salva um usuário no banco de dados. Este endpoint é ABERTO para inserções.
     *
     * @param usuario
     * @param authorizationHeader
-    * @return
+    * @return UsuarioDTO
     */
    @PostMapping
-   public ResponseEntity<?> salvar(@RequestBody Usuario usuario, @RequestHeader("Authorization") String authorizationHeader) {
+   public ResponseEntity<UsuarioDTO> salvar(@RequestBody Usuario usuario, @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
-      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
 
       if (usuario.getId() != null) {
+         Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
 
          if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
             throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
          }
-
 
          Usuario usuarioExistente = service.buscarPorId(usuario.getId());
          usuarioExistente.setNome(usuario.getNome());
@@ -59,9 +56,27 @@ public class UsuarioController {
          usuario = usuarioExistente;
       }
       Usuario usuarioSalvo = service.salvar(usuario);
-      return ResponseEntity.ok(usuarioSalvo);
+      return ResponseEntity.ok(UsuarioMapper.toDTO(usuarioSalvo));
    }
 
+
+   /**
+    * Altera a senha de um usuário. Somente o próprio usuário ou um ADMIN pode alterar a senha.
+    * Os outros campos do usuário não são alterados.
+    *
+    * @param usuario Objeto Usuario com a nova senha
+    * @param authorizationHeader
+    * @return UsuarioDTO
+    */
+   @PostMapping("/alterar-senha")
+   public ResponseEntity<UsuarioDTO> alterarSenha(@RequestBody Usuario usuario, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
+         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
+      }
+      Usuario usuarioSalvo = service.alterarSenha(usuario);
+      return ResponseEntity.ok(UsuarioMapper.toDTO(usuarioSalvo));
+   }
 
    /**
     * Remove um usuário do banco de dados.
@@ -92,13 +107,7 @@ public class UsuarioController {
       Usuario usuarioAutenticado = service.autenticar(usuario.getEmail(), usuario.getSenha());
       LocalDateTime dataExpiracao = jwtService.gerarDataExpiracao();
 
-      TokenDTO tokenDTO = TokenDTO
-              .builder()
-              .id(usuarioAutenticado.getId())
-              .nomeUsuario(usuarioAutenticado.getNome())
-              .token(jwtService.gerarToken(usuarioAutenticado))
-              .horaExpiracao(dataExpiracao.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-              .build();
+      TokenDTO tokenDTO = TokenDTO.builder().id(usuarioAutenticado.getId()).nomeUsuario(usuarioAutenticado.getNome()).token(jwtService.gerarToken(usuarioAutenticado)).horaExpiracao(dataExpiracao.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).build();
 
       return ResponseEntity.ok(tokenDTO);
    }
@@ -133,12 +142,7 @@ public class UsuarioController {
     * @return UsuariosAdminPaginadoDTO
     */
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarPorTermo(
-           @RequestParam int pagina,
-           @RequestParam int limite,
-           @RequestParam String termo,
-           @RequestParam String ordenacao,
-           @RequestHeader("Authorization") String authorizationHeader) {
+   public ResponseEntity<?> buscarPorTermo(@RequestParam int pagina, @RequestParam int limite, @RequestParam String termo, @RequestParam String ordenacao, @RequestHeader("Authorization") String authorizationHeader) {
 
       Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);

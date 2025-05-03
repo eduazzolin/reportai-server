@@ -121,9 +121,14 @@ public class JwtService implements JwtRepository {
     * @return Usuario
     */
    public Usuario obterUsuarioRequisitante(String token) {
-      token = token.replace("Bearer ", "");
-      Claims claims = obterClaims(token);
-      Long id = claims.get("id", Long.class);
+      Long id;
+      try {
+         token = token.replace("Bearer ", "");
+         Claims claims = obterClaims(token);
+         id = claims.get("id", Long.class);
+      } catch (Exception e) {
+         throw new CustomException(ErrorDictionary.TOKEN_INVALIDO);
+      }
       return usuarioService.buscarPorId(id);
    }
 

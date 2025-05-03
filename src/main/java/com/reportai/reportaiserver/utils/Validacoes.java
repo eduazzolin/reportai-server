@@ -106,10 +106,17 @@ public class Validacoes {
       }
 
       // senha
+      validarSenha(usuario);
+
+   }
+
+   public void validarSenha(Usuario usuario) {
       if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
       }
-
+      if (usuario.getSenha().length() < 6 || usuario.getSenha().length() > 255) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
    }
 
    public void validarRegistro(Registro registro) {

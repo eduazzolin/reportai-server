@@ -62,6 +62,7 @@ public class SecurityConfiguration {
                               new AntPathRequestMatcher("/registros/{id}", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/interacoes/relevantes/{idRegistro}", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/interacoes/{idRegistro}", HttpMethod.GET.name()),
+                              new AntPathRequestMatcher("/categorias", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/usuarios/autenticar", HttpMethod.POST.name()),
                               new AntPathRequestMatcher("/usuarios", HttpMethod.POST.name())
                       ).permitAll()
