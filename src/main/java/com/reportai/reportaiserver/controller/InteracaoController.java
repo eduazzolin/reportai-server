@@ -54,7 +54,11 @@ public class InteracaoController {
    @GetMapping("/{idRegistro}")
    public ResponseEntity<?> buscarInteracaoRegistroSimplesDTOPorIdRegistro(@PathVariable Long idRegistro, @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
       Registro registro = registroService.buscarPorId(idRegistro);
-      Usuario usuarioRequisitante = authorizationHeader != null ? jwtService.obterUsuarioRequisitante(authorizationHeader) : null;
+      Usuario usuarioRequisitante = null;
+      if (authorizationHeader != null) {
+         usuarioRequisitante =  jwtService.obterUsuarioRequisitante(authorizationHeader);
+
+      }
       InteracaoRegistroSimplesDTO interacaoRegistroSimplesDTO = service.buscarDTORegistroSimplesPorRegistroEUsuario(registro, usuarioRequisitante);
       return ResponseEntity.ok(interacaoRegistroSimplesDTO);
    }

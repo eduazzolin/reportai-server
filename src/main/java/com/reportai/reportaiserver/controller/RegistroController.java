@@ -29,7 +29,7 @@ public class RegistroController {
 
    @Autowired
    private UsuarioService usuarioService;
-   
+
    @Autowired
    private JwtService jwtService;
 
@@ -43,7 +43,20 @@ public class RegistroController {
    @PostMapping
    public ResponseEntity<?> salvar(@RequestBody Registro registro, @RequestHeader("Authorization") String authorizationHeader) {
       Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
-      registro.setUsuario(usuarioRequisitante);
+
+      /*
+       * se não for admin, coloca o usuario requisitante como dono do registro.
+       * se for admin, mas for um registro novo, coloca o usuario requisitante como dono do registro.
+       */
+      if (usuarioRequisitante.getRole() != Usuario.Roles.ADMIN) {
+         registro.setUsuario(usuarioRequisitante);
+      } else {
+         if (registro.getId() == null) {
+            registro.setUsuario(usuarioRequisitante);
+         }
+      }
+
+
       Registro registroSalvo = service.salvar(registro);
       RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
       return ResponseEntity.ok(registroDTO);
