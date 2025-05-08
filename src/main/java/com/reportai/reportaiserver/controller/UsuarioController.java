@@ -7,10 +7,13 @@ import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Usuario;
+import com.reportai.reportaiserver.service.CodigoRecuperacaoSenhaService;
+import com.reportai.reportaiserver.service.EmailService;
 import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +29,16 @@ public class UsuarioController {
    private UsuarioService service;
 
    @Autowired
+   private EmailService emailService;
+
+   @Autowired
+   private CodigoRecuperacaoSenhaService codigoRecuperacaoSenhaService;
+
+   @Autowired
    private JwtService jwtService;
 
+   @Value("${WEB_URL}")
+   private String webURL;
 
    /**
     * Salva um usuário no banco de dados. Este endpoint é ABERTO para inserções.
@@ -66,7 +77,7 @@ public class UsuarioController {
     * Altera a senha de um usuário. Somente o próprio usuário ou um ADMIN pode alterar a senha.
     * Os outros campos do usuário não são alterados.
     *
-    * @param usuario Objeto Usuario com a nova senha
+    * @param usuario             Objeto Usuario com a nova senha
     * @param authorizationHeader
     * @return UsuarioDTO
     */
@@ -151,6 +162,24 @@ public class UsuarioController {
 
       UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, ordenacao);
       return ResponseEntity.ok(usuariosAdminPaginadoDTO);
+   }
+
+
+   @PostMapping("/recuperar-senha")
+   public ResponseEntity<?> recuperarSenha(@RequestBody Usuario usuario) {
+
+      /* lança exceção se o usuário não existe */
+      usuario = service.buscarPorEmail(usuario.getEmail());
+
+      /* gerando o código */
+      String codigo = CodigoRecuperacaoSenhaService.gerarCodigo();
+      codigoRecuperacaoSenhaService.salvar(usuario, codigo);
+
+      emailService.enviarEmail(
+              usuario.getEmail(),
+              "Recuperação de Senha",
+              "Para redefinir a senha, acesse: " + webURL + "/redefinir-senha?token=" + codigo);
+      return ResponseEntity.ok().build();
    }
 
 

@@ -74,6 +74,20 @@ public class UsuarioService {
    }
 
    /**
+    * Busca um usuário por email. Caso o usuário não seja encontrado, lança uma exceção.
+    *
+    * @param email
+    * @return
+    */
+   public Usuario buscarPorEmail(String email) {
+      Optional<Usuario> usuario = repository.findByEmailAndIsDeleted(email, false);
+      if (usuario.isEmpty()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+      return usuario.get();
+   }
+
+   /**
     * Altera a senha de um usuário, os outros campos do usuário não são alterados.
     * @param usuario
     * @return Usuario
