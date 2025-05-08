@@ -35,8 +35,11 @@ public class CodigoRecuperacaoSenhaService {
 
 
    public CodigoRecuperacaoSenha buscarUltimaPorUsuario(Usuario usuario) {
-      Optional<CodigoRecuperacaoSenha> codigoRecuperacaoSenha = repository.findTop1ByUsuarioIdAndUtilizadoOrderByDtCriacaoDesc(usuario.getId(), false);
+      Optional<CodigoRecuperacaoSenha> codigoRecuperacaoSenha = repository.findTop1ByUsuarioIdOrderByDtCriacaoDesc(usuario.getId());
       if (codigoRecuperacaoSenha.isEmpty()) {
+         throw new CustomException(ErrorDictionary.TOKEN_INVALIDO);
+      }
+      if (codigoRecuperacaoSenha.get().getUtilizado()) {
          throw new CustomException(ErrorDictionary.TOKEN_INVALIDO);
       }
       return codigoRecuperacaoSenha.get();

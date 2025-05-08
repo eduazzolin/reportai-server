@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface CodigoRecuperacaoSenhaRepository extends JpaRepository<CodigoRecuperacaoSenha, Long> {
 
-   Optional<CodigoRecuperacaoSenha> findTop1ByUsuarioIdAndUtilizadoOrderByDtCriacaoDesc(Long usuarioId, boolean utilizado);
+   Optional<CodigoRecuperacaoSenha> findTop1ByUsuarioIdOrderByDtCriacaoDesc(Long usuarioId);
 
 
 }
