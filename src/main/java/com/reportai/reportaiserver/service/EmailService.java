@@ -31,7 +31,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject("Recuperação de Senha - Reportaí");
 
-            String linkRedefinicao = webURL + "/redefinir-senha?token=" + codigo;
+            String linkRedefinicao = webURL + "/redefinir-senha?token=" + codigo + "&email=" + to;
 
             String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">" +
                     "<div style=\"text-align: center; margin-bottom: 20px;\">" +

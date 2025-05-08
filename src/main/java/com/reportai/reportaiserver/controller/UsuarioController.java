@@ -115,6 +115,28 @@ public class UsuarioController {
    }
 
    /**
+    * Gera um token de recuperação de senha e envia por email. Este endpoint é ABERTO.
+    *
+    * @param usuario
+    * @return 200
+    */
+   @PostMapping("/recuperar-senha")
+   public ResponseEntity<?> recuperarSenha(@RequestBody Usuario usuario) {
+
+      /* lança exceção se o usuário não existe */
+      usuario = service.buscarPorEmail(usuario.getEmail());
+
+      /* gerando o código */
+      String codigo = CodigoRecuperacaoSenhaService.gerarCodigo();
+      codigoRecuperacaoSenhaService.salvar(usuario, codigo);
+      boolean resultadoEmail = emailService.enviarEmailRecuperacaoSenha(usuario.getEmail(), codigo);
+      if (!resultadoEmail) {
+         throw new CustomException(ErrorDictionary.ERRO_EMAIL);
+      }
+      return ResponseEntity.ok().build();
+   }
+
+   /**
     * Remove um usuário do banco de dados.
     *
     * @param id                  ID do usuário a ser removido
@@ -185,23 +207,6 @@ public class UsuarioController {
 
       UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, ordenacao);
       return ResponseEntity.ok(usuariosAdminPaginadoDTO);
-   }
-
-
-   @PostMapping("/recuperar-senha")
-   public ResponseEntity<?> recuperarSenha(@RequestBody Usuario usuario) {
-
-      /* lança exceção se o usuário não existe */
-      usuario = service.buscarPorEmail(usuario.getEmail());
-
-      /* gerando o código */
-      String codigo = CodigoRecuperacaoSenhaService.gerarCodigo();
-      codigoRecuperacaoSenhaService.salvar(usuario, codigo);
-      boolean resultadoEmail = emailService.enviarEmailRecuperacaoSenha(usuario.getEmail(), codigo);
-      if (!resultadoEmail) {
-         throw new CustomException(ErrorDictionary.ERRO_EMAIL);
-      }
-      return ResponseEntity.ok().build();
    }
 
 
