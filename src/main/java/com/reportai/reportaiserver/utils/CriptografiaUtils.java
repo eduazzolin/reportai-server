@@ -8,8 +8,8 @@ public class CriptografiaUtils {
       return new BCryptPasswordEncoder().encode(texto);
    }
 
-   public static boolean verificarCorrespondencia(String texto1, String texto2) {
-      return new BCryptPasswordEncoder().matches(texto1, texto2);
+   public static boolean verificarCorrespondencia(String textoOriginal, String textoCriptografado) {
+      return new BCryptPasswordEncoder().matches(textoOriginal, textoCriptografado);
    }
 
 }

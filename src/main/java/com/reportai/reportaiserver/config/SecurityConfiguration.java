@@ -65,6 +65,7 @@ public class SecurityConfiguration {
                               new AntPathRequestMatcher("/categorias", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/usuarios/autenticar", HttpMethod.POST.name()),
                               new AntPathRequestMatcher("/usuarios/recuperar-senha", HttpMethod.POST.name()),
+                              new AntPathRequestMatcher("/usuarios/alterar-senha-token", HttpMethod.POST.name()),
                               new AntPathRequestMatcher("/usuarios", HttpMethod.POST.name())
                       ).permitAll()
                       .anyRequest().authenticated()

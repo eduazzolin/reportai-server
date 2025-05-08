@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
-
 @Service
 public class UsuarioService {
 
@@ -89,6 +87,7 @@ public class UsuarioService {
 
    /**
     * Altera a senha de um usuário, os outros campos do usuário não são alterados.
+    *
     * @param usuario
     * @return Usuario
     */

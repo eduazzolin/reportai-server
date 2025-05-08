@@ -1,19 +1,21 @@
 package com.reportai.reportaiserver.controller;
 
 import com.reportai.reportaiserver.dto.TokenDTO;
+import com.reportai.reportaiserver.dto.TokenSenhaDTO;
 import com.reportai.reportaiserver.dto.UsuarioDTO;
 import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
+import com.reportai.reportaiserver.model.CodigoRecuperacaoSenha;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.service.CodigoRecuperacaoSenhaService;
 import com.reportai.reportaiserver.service.EmailService;
 import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.UsuarioService;
+import com.reportai.reportaiserver.utils.CriptografiaUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,8 +39,6 @@ public class UsuarioController {
    @Autowired
    private JwtService jwtService;
 
-   @Value("${WEB_URL}")
-   private String webURL;
 
    /**
     * Salva um usuário no banco de dados. Este endpoint é ABERTO para inserções.
@@ -82,13 +82,36 @@ public class UsuarioController {
     * @return UsuarioDTO
     */
    @PostMapping("/alterar-senha")
-   public ResponseEntity<UsuarioDTO> alterarSenha(@RequestBody Usuario usuario, @RequestHeader("Authorization") String authorizationHeader) {
+   public ResponseEntity<UsuarioDTO> alterarSenha(@RequestBody Usuario usuario, @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
       Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
          throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
       }
       Usuario usuarioSalvo = service.alterarSenha(usuario);
       return ResponseEntity.ok(UsuarioMapper.toDTO(usuarioSalvo));
+   }
+
+   /**
+    * Altera a senha de um usuário utilizando o token de recuperação de senha. Este endpoint é ABERTO.
+    *
+    * @param tokenSenhaDTO
+    * @return UsuarioDTO
+    */
+   @PostMapping("/alterar-senha-token")
+   public ResponseEntity<UsuarioDTO> alterarSenhaToken(@RequestBody TokenSenhaDTO tokenSenhaDTO) {
+      Usuario usuario = service.buscarPorEmail(tokenSenhaDTO.getEmail());
+      String token = tokenSenhaDTO.getToken();
+      CodigoRecuperacaoSenha codigoRecuperacaoSenha = codigoRecuperacaoSenhaService.buscarUltimaPorUsuario(usuario);
+      String tokenCriptografadoBanco = codigoRecuperacaoSenha.getCodigo();
+
+      if (!CriptografiaUtils.verificarCorrespondencia(token, tokenCriptografadoBanco)) {
+         throw new CustomException(ErrorDictionary.TOKEN_INVALIDO);
+      }
+
+      usuario.setSenha(tokenSenhaDTO.getSenha());
+      usuario = service.alterarSenha(usuario);
+      codigoRecuperacaoSenhaService.utilizarCodigo(codigoRecuperacaoSenha);
+      return ResponseEntity.ok(UsuarioMapper.toDTO(usuario));
    }
 
    /**
@@ -174,11 +197,10 @@ public class UsuarioController {
       /* gerando o código */
       String codigo = CodigoRecuperacaoSenhaService.gerarCodigo();
       codigoRecuperacaoSenhaService.salvar(usuario, codigo);
-
-      emailService.enviarEmail(
-              usuario.getEmail(),
-              "Recuperação de Senha",
-              "Para redefinir a senha, acesse: " + webURL + "/redefinir-senha?token=" + codigo);
+      boolean resultadoEmail = emailService.enviarEmailRecuperacaoSenha(usuario.getEmail(), codigo);
+      if (!resultadoEmail) {
+         throw new CustomException(ErrorDictionary.ERRO_EMAIL);
+      }
       return ResponseEntity.ok().build();
    }
 

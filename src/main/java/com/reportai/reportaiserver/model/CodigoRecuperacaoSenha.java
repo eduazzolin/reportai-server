@@ -37,4 +37,6 @@ public class CodigoRecuperacaoSenha {
    @Column()
    String codigo;
 
+   @Column()
+   private Boolean utilizado;
 }
