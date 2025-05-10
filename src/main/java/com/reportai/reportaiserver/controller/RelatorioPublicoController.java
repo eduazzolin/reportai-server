@@ -62,4 +62,6 @@ public class RelatorioPublicoController {
    ) {
       return ResponseEntity.ok(registroRepository.generateRelatorioCategoria(dataInicio, dataFim));
    }
+
+
 }

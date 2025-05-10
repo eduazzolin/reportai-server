@@ -8,6 +8,9 @@ import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.InteracaoRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,15 +26,23 @@ public class InteracaoService {
    @Autowired
    private Validacoes validacoes;
 
+   @Autowired
+   private EntityManager entityManager;
+
    /**
     * Salva uma interação no banco de dados.
+    * Se a interação for do tipo CONCLUIDO, chama a proc SP_INCLUIR_RESOLUCAO_AUTOMATICA.
     *
     * @param interacao
     * @return interacao salva
     */
    public Interacao salvar(Interacao interacao) {
       validacoes.validarInteracao(interacao);
-      return repository.save(interacao);
+      interacao = repository.save(interacao);
+      if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
+         chamarProcedureIncluirResolucaoAutomatica(interacao.getRegistro().getId());
+      }
+      return interacao;
    }
 
    /**
@@ -109,5 +120,13 @@ public class InteracaoService {
       }
 
       return dto;
+   }
+
+
+   public void chamarProcedureIncluirResolucaoAutomatica(Long idRegistro) {
+      StoredProcedureQuery query = entityManager.createStoredProcedureQuery("SP_INCLUIR_RESOLUCAO_AUTOMATICA");
+      query.registerStoredProcedureParameter("p_id_registro", Long.class, ParameterMode.IN);
+      query.setParameter("p_id_registro", idRegistro);
+      query.execute();
    }
 }

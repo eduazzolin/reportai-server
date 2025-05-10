@@ -46,7 +46,6 @@ public class StartSeeder implements CommandLineRunner {
       createProcedureAdminListarRegistros();
       createProcedureConclusaoAutomatica();
       createProceduresRelatorios();
-      callProcedure("SP_CONCLUSAO_AUTOMATICA");
    }
 
    private void callProcedure(String procedureName) {
@@ -55,22 +54,24 @@ public class StartSeeder implements CommandLineRunner {
 
    private void createProcedureConclusaoAutomatica() {
 
-      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_CONCLUSAO_AUTOMATICA");
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_INCLUIR_RESOLUCAO_AUTOMATICA");
       jdbcTemplate.execute("""
-              CREATE PROCEDURE SP_CONCLUSAO_AUTOMATICA()
+              CREATE PROCEDURE SP_INCLUIR_RESOLUCAO_AUTOMATICA(IN p_id_registro INT)
               BEGIN
-              
                   /*
-                   * tabela com os registros ativos enriquecida com:
-                   * - data da última interação do tipo 'concluído'
-                   * - flag se possui ou não agendamento
-                   * - data do último removido_em da tabela de agendamentos
+                   * insere os registros na tabela de conclusão programada se:
+                   * A quantidade de interações for múltiplo de 5;
+                   * O registro não existir na tabela de conclusão programada ou, caso exista,
+                   * ele não deve estar com a data de remoção aberta e a data de remoção deve ser anterior
+                   * à data da última interação.
                    */
-                  DROP TEMPORARY TABLE IF EXISTS REGISTROS_COM_CONCLUIDO;
-                  CREATE TEMPORARY TABLE REGISTROS_COM_CONCLUIDO AS
+              
+                  DROP TEMPORARY TABLE IF EXISTS REGISTRO_DETALHE;
+                  CREATE TEMPORARY TABLE REGISTRO_DETALHE AS
                   SELECT R.ID                                                     AS id_registro,
                          R.usuario_id                                             AS id_usuario,
-                         MAX(I.dt_criacao)                                        AS dt_ultimo_concluido,
+                         MAX(I.dt_criacao)                                        AS dt_ultima_interacao,
+                         COUNT(I.ID)                                              AS qt_interacao,
                          CASE WHEN MAX(C.id) IS NOT NULL THEN TRUE ELSE FALSE END AS fl_possui_agendamento,
                          MAX(C.removida_em)                                       AS dt_ultimo_removido_em
                   FROM registro R
@@ -78,22 +79,26 @@ public class StartSeeder implements CommandLineRunner {
                            LEFT JOIN conclusao_programada c ON c.id_registro = r.id
                   WHERE NOT R.is_concluido
                     AND NOT R.is_deleted
+                    AND R.ID = p_id_registro
                   GROUP BY R.ID, R.usuario_id;
               
-                  /*
-                   * insere os registros na tabela de conclusão programada se:
-                   * O registro não existir na tabela de conclusão programada ou, caso exista,
-                   * ele não deve estar com a data de remoção aberta e a data de remoção deve ser anterior
-                   * à data da última interação.
-                   */
                   INSERT INTO conclusao_programada (DT_CRIACAO, ID_REGISTRO, ID_USUARIO, REMOVIDA_EM, CONCLUSAO_PROGRAMADA_PARA)
-                  SELECT CURRENT_TIMESTAMP                                AS dt_criacao,
-                         id_registro                                      AS id_registro,
-                         id_usuario                                       AS id_usuario,
-                         NULL                                             AS removida_em,
-                         DATE_ADD(dt_ultimo_concluido, INTERVAL 30 DAY)   AS conclusao_programada_para
-                  FROM REGISTROS_COM_CONCLUIDO r
-                  WHERE NOT fl_possui_agendamento OR dt_ultimo_concluido > dt_ultimo_removido_em;
+                  SELECT CURRENT_TIMESTAMP                              AS dt_criacao,
+                         id_registro                                    AS id_registro,
+                         id_usuario                                     AS id_usuario,
+                         NULL                                           AS removida_em,
+                         DATE_ADD(dt_ultima_interacao, INTERVAL 30 DAY) AS conclusao_programada_para
+                  FROM REGISTRO_DETALHE r
+                  WHERE qt_interacao % 5 = 0
+                    AND (NOT fl_possui_agendamento OR dt_ultima_interacao > dt_ultimo_removido_em);
+              
+              END;
+              """);
+
+      jdbcTemplate.execute("DROP PROCEDURE IF EXISTS SP_CONCLUSAO_AUTOMATICA");
+      jdbcTemplate.execute("""
+              CREATE PROCEDURE SP_CONCLUSAO_AUTOMATICA()
+              BEGIN
               
                   /*
                    * conclui os registros programados para remoção
@@ -109,6 +114,7 @@ public class StartSeeder implements CommandLineRunner {
                   SET removida_em = CURRENT_TIMESTAMP
                   WHERE conclusao_programada_para < CURRENT_TIMESTAMP
                     AND removida_em IS NULL;
+              
               
               END;
               """);
@@ -671,14 +677,17 @@ public class StartSeeder implements CommandLineRunner {
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).dtCriacao(LocalDateTime.now().minusDays(15)).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(4L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(CONCLUIDO).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(5L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(7L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(9L).get()).usuario(usuarioRepository.findById(4L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(1L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(2L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
          interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(RELEVANTE).isDeleted(false).build());
-         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(5L).get()).tipo(CONCLUIDO).isDeleted(false).dtCriacao(LocalDateTime.now().minusDays(21)).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
+         interacaoRepository.save(Interacao.builder().registro(registroRepository.findById(8L).get()).usuario(usuarioRepository.findById(3L).get()).tipo(CONCLUIDO).isDeleted(false).build());
 
       }
 
