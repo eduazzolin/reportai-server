@@ -425,7 +425,7 @@ public class StartSeeder implements CommandLineRunner {
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_RELATORIO_STATUS(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
-                  SELECT CASE WHEN IS_CONCLUIDO THEN 'Concluído' ELSE 'Ativo' END AS STATUS, COUNT(*) QUANTIDADE
+                  SELECT CASE WHEN IS_CONCLUIDO THEN 'Resolvido' ELSE 'Aberto' END AS STATUS, COUNT(*) QUANTIDADE
                   FROM REGISTRO
                   WHERE NOT IS_DELETED
                     AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
@@ -442,7 +442,7 @@ public class StartSeeder implements CommandLineRunner {
          categoriaRepository.save(Categoria.builder().nome("Lâmpada queimada").icone("/markers/light.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Árvore no caminho").icone("/markers/tree.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Sinalização de trânsito").icone("/markers/traffic-sign.svg").isDeleted(false).build());
-         categoriaRepository.save(Categoria.builder().nome("Vazamento de água").icone("/markers/flood.svg").isDeleted(false).build());
+         categoriaRepository.save(Categoria.builder().nome("Vazamento de água").icone("/markers/leak.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Alagamento").icone("/markers/flood.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Lixo acumulado").icone("/markers/trash.svg").isDeleted(false).build());
          categoriaRepository.save(Categoria.builder().nome("Problema de segurança").icone("/markers/safe.svg").isDeleted(false).build());
@@ -457,7 +457,7 @@ public class StartSeeder implements CommandLineRunner {
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
          usuarioRepository.save(Usuario.builder().role(ADMIN).nome("ADM").email("edu@rdo.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("160.410.930-09").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("João Silva").email("joao@silva.com").senha("123456").cpf("839.925.170-47").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("joao@silva.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("839.925.170-47").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("532.162.220-55").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("540.924.870-88").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("745.704.400-02").isDeleted(false).build());
