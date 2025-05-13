@@ -103,9 +103,12 @@ public class RegistroService {
       repository.save(registro);
 
       // Remover as imagens
-      for (Imagem imagem : registro.getImagens()) {
-         imagemService.remover(imagem);
+      if (registro.getImagens() != null) {
+         for (Imagem imagem : registro.getImagens()) {
+            imagemService.remover(imagem);
+         }
       }
+
    }
 
    /**

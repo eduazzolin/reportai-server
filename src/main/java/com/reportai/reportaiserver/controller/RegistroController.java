@@ -8,7 +8,7 @@ import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.RegistroMapper;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
-import com.reportai.reportaiserver.service.InteracaoService;
+import com.reportai.reportaiserver.service.JwtService;
 import com.reportai.reportaiserver.service.RegistroService;
 import com.reportai.reportaiserver.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +28,10 @@ public class RegistroController {
    private RegistroService service;
 
    @Autowired
-   private InteracaoService interacaoService;
-   @Autowired
    private UsuarioService usuarioService;
+
+   @Autowired
+   private JwtService jwtService;
 
 
    /**
@@ -40,9 +41,22 @@ public class RegistroController {
     * @return DTO do registro salvo
     */
    @PostMapping
-   public ResponseEntity<?> salvar(@RequestBody Registro registro) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
-      registro.setUsuario(usuarioRequisitante);
+   public ResponseEntity<?> salvar(@RequestBody Registro registro, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+
+      /*
+       * se não for admin, coloca o usuario requisitante como dono do registro.
+       * se for admin, mas for um registro novo, coloca o usuario requisitante como dono do registro.
+       */
+      if (usuarioRequisitante.getRole() != Usuario.Roles.ADMIN) {
+         registro.setUsuario(usuarioRequisitante);
+      } else {
+         if (registro.getId() == null) {
+            registro.setUsuario(usuarioRequisitante);
+         }
+      }
+
+
       Registro registroSalvo = service.salvar(registro);
       RegistroDTO registroDTO = RegistroMapper.toDTO(registroSalvo);
       return ResponseEntity.ok(registroDTO);
@@ -56,8 +70,8 @@ public class RegistroController {
     * @return Resposta HTTP 200 OK
     */
    @PutMapping("/{id}/concluir")
-   public ResponseEntity<?> concluir(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> concluir(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       Registro registro = service.buscarPorId(id);
 
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
@@ -68,8 +82,8 @@ public class RegistroController {
    }
 
    @PutMapping("/{id}/ignorar-conclusao")
-   public ResponseEntity<?> removerConclusaoProgramada(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> removerConclusaoProgramada(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       Registro registro = service.buscarPorId(id);
 
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
@@ -83,6 +97,7 @@ public class RegistroController {
    /**
     * Busca registros por distância a partir de uma localização (latitude e longitude).
     * Para mais informações, consulte a procedure SP_REGISTROS_POR_DISTANCIA.
+    * Este endpoint é ABERTO.
     *
     * @param latitude
     * @param longitude
@@ -114,16 +129,15 @@ public class RegistroController {
     * @return meusRegistrosDTO
     */
    @GetMapping("/meus-registros")
-   public ResponseEntity<?> buscarMeusRegistrosDTO(@RequestParam int pagina, @RequestParam int limite) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
-
+   public ResponseEntity<?> buscarMeusRegistrosDTO(@RequestParam int pagina, @RequestParam int limite, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       MeusRegistrosDTO meusRegistrosDTO = service.buscarMeusRegistrosDTOPorUsuario(usuarioRequisitante, pagina, limite);
-
       return ResponseEntity.ok(meusRegistrosDTO);
    }
 
    /**
     * Busca o DTO do registro por ID. Desconsidera removidos.
+    * Este endpoint é ABERTO.
     *
     * @param id ID do registro a ser buscado
     * @return
@@ -141,7 +155,9 @@ public class RegistroController {
     * @return Registro
     */
    @GetMapping("/dev/{id}")
-   public ResponseEntity<Registro> buscarPorId(@PathVariable Long id) {
+   public ResponseEntity<Registro> buscarPorId(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);
       Registro registro = service.buscarPorId(id);
       return ResponseEntity.ok(registro);
    }
@@ -154,8 +170,8 @@ public class RegistroController {
     * @return
     */
    @DeleteMapping("/{id}")
-   public ResponseEntity<?> remover(@PathVariable Long id) {
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
+   public ResponseEntity<?> remover(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       Registro registro = service.buscarPorId(id);
 
       if (!registro.getUsuario().getId().equals(usuarioRequisitante.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
@@ -182,14 +198,9 @@ public class RegistroController {
     * @return
     */
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarRegistrosAdminPaginadoDTOPorTermo(@RequestParam(defaultValue = "") String idNome, @RequestParam(defaultValue = "0") Long idUsuario, @RequestParam(defaultValue = "0") Long idCategoria, @RequestParam(defaultValue = "") String bairro, @RequestParam(defaultValue = "") String status, @RequestParam int pagina, @RequestParam int limite, @RequestParam(defaultValue = "dtCriacao") String ordenacao) {
-
-      Usuario usuarioRequisitante = usuarioService.buscarPorId(2L); // #ToDo #SpringSecurity
-
-      if (!(usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN))) {
-         throw new CustomException(ErrorDictionary.USUARIO_SEM_PERMISSAO);
-      }
-
+   public ResponseEntity<?> buscarRegistrosAdminPaginadoDTOPorTermo(@RequestParam(defaultValue = "") String idNome, @RequestParam(defaultValue = "0") Long idUsuario, @RequestParam(defaultValue = "0") Long idCategoria, @RequestParam(defaultValue = "") String bairro, @RequestParam(defaultValue = "") String status, @RequestParam int pagina, @RequestParam int limite, @RequestParam(defaultValue = "dtCriacao") String ordenacao, @RequestHeader("Authorization") String authorizationHeader) {
+      Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
+      jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);
       RegistrosAdminPaginadoDTO registrosAdminPaginadoDTO = service.buscarRegistrosAdminpaginadoDTOPorTermos(idNome, idUsuario, idCategoria, bairro, status, pagina, limite, ordenacao);
       return ResponseEntity.ok(registrosAdminPaginadoDTO);
    }

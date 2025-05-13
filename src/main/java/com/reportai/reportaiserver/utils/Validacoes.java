@@ -2,6 +2,7 @@ package com.reportai.reportaiserver.utils;
 
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.model.Categoria;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
@@ -32,10 +33,6 @@ public class Validacoes {
    private InteracaoRepository interacaoRepository;
 
    public static boolean validarCPF(String cpf) {
-      if (0 == 0) {
-         return true; //TODO dev
-      }
-
       if (cpf == null) {
          return false;
       }
@@ -106,10 +103,17 @@ public class Validacoes {
       }
 
       // senha
+      validarSenha(usuario);
+
+   }
+
+   public void validarSenha(Usuario usuario) {
       if (usuario.getSenha() == null || usuario.getSenha().isEmpty()) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
       }
-
+      if (usuario.getSenha().length() < 6 || usuario.getSenha().length() > 255) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
    }
 
    public void validarRegistro(Registro registro) {
@@ -126,6 +130,11 @@ public class Validacoes {
 
       // descricao
       if (registro.getDescricao() == null || registro.getDescricao().isEmpty() || registro.getDescricao().length() > 3500) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
+      // bairro
+      if (registro.getBairro() == null || registro.getBairro().isEmpty() || registro.getBairro().length() > 255) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
       }
 
@@ -195,5 +204,11 @@ public class Validacoes {
       }
 
 
+   }
+
+   public void validarCategoria(Categoria categoria) {
+      if (categoria.getNome() == null || categoria.getNome().isEmpty() || categoria.getNome().length() > 255) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
    }
 }

@@ -8,15 +8,13 @@ import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.UsuarioRepository;
-import com.reportai.reportaiserver.utils.UsuarioUtils;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-
-import static com.reportai.reportaiserver.model.Usuario.Roles.USUARIO;
 
 @Service
 public class UsuarioService {
@@ -29,10 +27,6 @@ public class UsuarioService {
 
    public Usuario salvar(Usuario usuario) {
       validacoes.validarUsuario(usuario);
-      usuario.setRole(USUARIO);
-      if (usuario.getId() != null) {
-         usuario.setCpf(repository.findById(usuario.getId()).get().getCpf());
-      }
       return repository.save(usuario);
    }
 
@@ -44,7 +38,7 @@ public class UsuarioService {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
       }
 
-      if (!UsuarioUtils.senhasBatem(senha, usuario.get().getSenha())) {
+      if (!Objects.equals(senha, usuario.get().getSenha())) {
          throw new CustomException(ErrorDictionary.SENHA_INVALIDA);
       }
 
@@ -63,12 +57,45 @@ public class UsuarioService {
       return UsuarioMapper.toDTO(usuario.get());
    }
 
+   /**
+    * Busca um usuário por ID. Caso o usuário não seja encontrado, lança uma exceção.
+    *
+    * @param id
+    * @return
+    */
    public Usuario buscarPorId(Long id) {
-      Optional<Usuario> usuario = repository.findById(id);
+      Optional<Usuario> usuario = repository.findByIdAndIsDeleted(id, false);
       if (usuario.isEmpty()) {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
       }
       return usuario.get();
+   }
+
+   /**
+    * Busca um usuário por email. Caso o usuário não seja encontrado, lança uma exceção.
+    *
+    * @param email
+    * @return
+    */
+   public Usuario buscarPorEmail(String email) {
+      Optional<Usuario> usuario = repository.findByEmailAndIsDeleted(email, false);
+      if (usuario.isEmpty()) {
+         throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
+      }
+      return usuario.get();
+   }
+
+   /**
+    * Altera a senha de um usuário, os outros campos do usuário não são alterados.
+    *
+    * @param usuario
+    * @return Usuario
+    */
+   public Usuario alterarSenha(Usuario usuario) {
+      Usuario usuarioEncontrado = buscarPorId(usuario.getId());
+      validacoes.validarSenha(usuario);
+      usuarioEncontrado.setSenha(usuario.getSenha());
+      return repository.save(usuarioEncontrado);
    }
 
    public Usuario buscarAtivosPorId(Long id) {
@@ -102,4 +129,6 @@ public class UsuarioService {
       usuario.setIsDeleted(true);
       repository.save(usuario);
    }
+
+
 }

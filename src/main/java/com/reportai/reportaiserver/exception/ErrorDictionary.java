@@ -22,6 +22,8 @@ public enum ErrorDictionary {
    ,SEM_PERMISSAO("ERRO-018", "Usuário sem permissão para realizar a operação.")
    ,ERRO_GCS("ERRO-019", "Erro ao se comunicar com o Google Cloud Storage.")
    ,REGISTRO_JA_CONCLUIDO("ERRO-020", "Registro já está concluído.")
+   ,TOKEN_INVALIDO("ERRO-021", "Erro de autenticação.")
+   ,ERRO_EMAIL("ERRO-022", "Erro ao enviar email.")
    ;
    private final String codigo;
    private final String descricao;

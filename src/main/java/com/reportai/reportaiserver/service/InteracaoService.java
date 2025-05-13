@@ -8,6 +8,9 @@ import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.InteracaoRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,15 +26,23 @@ public class InteracaoService {
    @Autowired
    private Validacoes validacoes;
 
+   @Autowired
+   private EntityManager entityManager;
+
    /**
     * Salva uma interação no banco de dados.
+    * Se a interação for do tipo CONCLUIDO, chama a proc SP_INCLUIR_RESOLUCAO_AUTOMATICA.
     *
     * @param interacao
     * @return interacao salva
     */
    public Interacao salvar(Interacao interacao) {
       validacoes.validarInteracao(interacao);
-      return repository.save(interacao);
+      interacao = repository.save(interacao);
+      if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
+         chamarProcedureIncluirResolucaoAutomatica(interacao.getRegistro().getId());
+      }
+      return interacao;
    }
 
    /**
@@ -93,18 +104,29 @@ public class InteracaoService {
    public InteracaoRegistroSimplesDTO buscarDTORegistroSimplesPorRegistroEUsuario(Registro registro, Usuario usuario) {
       InteracaoRegistroSimplesDTO dto = new InteracaoRegistroSimplesDTO();
       dto.setIdRegistro(registro.getId());
-      dto.setIdUsuario(usuario.getId());
       dto.setQtRelevante(repository.countByRegistroAndTipoAndIsDeleted(registro, Interacao.TipoInteracao.RELEVANTE, false));
       dto.setQtIrrelevante(repository.countByRegistroAndTipoAndIsDeleted(registro, Interacao.TipoInteracao.IRRELEVANTE, false));
       dto.setQtConcluido(repository.countByRegistroAndTipoAndIsDeleted(registro, Interacao.TipoInteracao.CONCLUIDO, false));
 
-      Interacao interacaoRelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.RELEVANTE, usuario, false);
-      Interacao interacaoIrrelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.IRRELEVANTE, usuario, false);
-      Interacao interacaoConcluido = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.CONCLUIDO, usuario, false);
+      if (usuario != null) {
+         dto.setIdUsuario(usuario.getId());
+         Interacao interacaoRelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.RELEVANTE, usuario, false);
+         Interacao interacaoIrrelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.IRRELEVANTE, usuario, false);
+         Interacao interacaoConcluido = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(registro, Interacao.TipoInteracao.CONCLUIDO, usuario, false);
 
-      dto.setUsuarioInteracaoIdRelevante(interacaoRelevante != null ? interacaoRelevante.getId() : null);
-      dto.setUsuarioInteracaoIdIrrelevante(interacaoIrrelevante != null ? interacaoIrrelevante.getId() : null);
-      dto.setUsuarioInteracaoIdConcluido(interacaoConcluido != null ? interacaoConcluido.getId() : null);
+         dto.setUsuarioInteracaoIdRelevante(interacaoRelevante != null ? interacaoRelevante.getId() : null);
+         dto.setUsuarioInteracaoIdIrrelevante(interacaoIrrelevante != null ? interacaoIrrelevante.getId() : null);
+         dto.setUsuarioInteracaoIdConcluido(interacaoConcluido != null ? interacaoConcluido.getId() : null);
+      }
+
       return dto;
+   }
+
+
+   public void chamarProcedureIncluirResolucaoAutomatica(Long idRegistro) {
+      StoredProcedureQuery query = entityManager.createStoredProcedureQuery("SP_INCLUIR_RESOLUCAO_AUTOMATICA");
+      query.registerStoredProcedureParameter("p_id_registro", Long.class, ParameterMode.IN);
+      query.setParameter("p_id_registro", idRegistro);
+      query.execute();
    }
 }

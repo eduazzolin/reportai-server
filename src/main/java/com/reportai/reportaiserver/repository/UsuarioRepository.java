@@ -16,6 +16,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
    Optional<Usuario> findByIdAndIsDeleted(Long id, boolean b);
 
+   Optional<Usuario> findByEmailAndIsDeleted(String email, boolean b);
+
    @Query(value = "CALL SP_ADMIN_LISTAR_USUARIOS(:termo, :offset, :limite, :ordenacao)", nativeQuery = true)
    List<UsuarioListagemAdminProjection> searchAtivosByTermo(@Param("termo") String termo,
                                                             @Param("offset") int offset,
