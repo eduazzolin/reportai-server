@@ -63,6 +63,7 @@ public class SecurityConfiguration {
                               new AntPathRequestMatcher("/interacoes/relevantes/{idRegistro}", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/interacoes/{idRegistro}", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/categorias", HttpMethod.GET.name()),
+                              new AntPathRequestMatcher("/categorias/{id}", HttpMethod.GET.name()),
                               new AntPathRequestMatcher("/usuarios/autenticar", HttpMethod.POST.name()),
                               new AntPathRequestMatcher("/usuarios/recuperar-senha", HttpMethod.POST.name()),
                               new AntPathRequestMatcher("/usuarios/alterar-senha-token", HttpMethod.POST.name()),

@@ -2,6 +2,7 @@ package com.reportai.reportaiserver.utils;
 
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
+import com.reportai.reportaiserver.model.Categoria;
 import com.reportai.reportaiserver.model.Interacao;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.model.Usuario;
@@ -132,6 +133,11 @@ public class Validacoes {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
       }
 
+      // bairro
+      if (registro.getBairro() == null || registro.getBairro().isEmpty() || registro.getBairro().length() > 255) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
+
       // categoria
       if (registro.getCategoria() == null) {
          throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
@@ -198,5 +204,11 @@ public class Validacoes {
       }
 
 
+   }
+
+   public void validarCategoria(Categoria categoria) {
+      if (categoria.getNome() == null || categoria.getNome().isEmpty() || categoria.getNome().length() > 255) {
+         throw new CustomException(ErrorDictionary.ERRO_PREENCHIMENTO);
+      }
    }
 }
