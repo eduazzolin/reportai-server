@@ -17,22 +17,24 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: admin
-          MYSQL_DATABASE: reportai
         ports:
           - 3306:3306
-
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -padmin"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
-      - name: Check out the repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
-          java-version: "17"
-          distribution: "adopt"
+          java-version: '17'
+          distribution: 'adopt'
 
-      # Configura o cache do Maven para otimizar o tempo de build
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -41,10 +43,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
 
-      - name: Wait for MySQL to be ready
+      - name: Wait for MySQL to be ready and create database
         run: |
           for i in {1..30}; do
             if mysqladmin ping -h mysql -uroot -padmin --silent; then
@@ -54,11 +56,14 @@ jobs:
             echo "Aguardando MySQL iniciar..."
             sleep 2
           done
+          mysql -h mysql -uroot -padmin -e "CREATE DATABASE IF NOT EXISTS reportai_test;"
 
+      - name: Build with Maven (sem testes)
+        run: mvn clean package -DskipTests
 
       - name: Run tests
         env:
-          DB_URL: jdbc:mysql://mysql:3306/reportai
+          DB_URL: jdbc:mysql://mysql:3306/reportai_test
           DB_USERNAME: root
           DB_PASSWORD: admin
           JWT_EXPIRACAO: 1000
@@ -66,6 +71,4 @@ jobs:
           SMTP_USERNAME: test
           SMTP_PASSWORD: test
           OPENAI_API_KEY: test
-        run: mvn clean test
-
-
+        run: mvn test
