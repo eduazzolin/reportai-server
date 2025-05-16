@@ -46,12 +46,15 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: |
-          echo "Aguardando MySQL iniciar..."
           for i in {1..30}; do
-            nc -z localhost 3306 && echo "MySQL está pronto!" && break
-            echo "Ainda aguardando o MySQL..."
+            if mysqladmin ping -h mysql -uroot -padmin --silent; then
+              echo "MySQL está pronto!"
+              break
+            fi
+            echo "Aguardando MySQL iniciar..."
             sleep 2
           done
+
 
       - name: Run tests
         env:
