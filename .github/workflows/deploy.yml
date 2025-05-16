@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: admin
+          MYSQL_DATABASE: reportai
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: "17"
+          distribution: "adopt"
+
+      # Configura o cache do Maven para otimizar o tempo de build
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Aguardando MySQL iniciar..."
+          for i in {1..30}; do
+            nc -z localhost 3306 && echo "MySQL está pronto!" && break
+            echo "Ainda aguardando o MySQL..."
+            sleep 2
+          done
+
+      - name: Run tests
+        env:
+          DB_URL: jdbc:mysql://localhost:3306/reportai
+          DB_USERNAME: root
+          DB_PASSWORD: admin
+          JWT_EXPIRACAO: 1000
+          JWT_CHAVE_ASSINATURA: test
+        run: mvn clean test
+
+
