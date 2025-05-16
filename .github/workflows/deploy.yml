@@ -17,7 +17,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: admin
-          MYSQL_DATABASE: reportai_test
+          MYSQL_DATABASE: reportai
         ports:
           - 3306:3306
 
@@ -54,7 +54,7 @@ jobs:
 
       - name: Run tests
         env:
-          DB_URL: jdbc:mysql://localhost:3306/reportai_test
+          DB_URL: jdbc:mysql://mysql:3306/reportai
           DB_USERNAME: root
           DB_PASSWORD: admin
           JWT_EXPIRACAO: 1000
