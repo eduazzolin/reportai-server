@@ -59,6 +59,9 @@ jobs:
           DB_PASSWORD: admin
           JWT_EXPIRACAO: 1000
           JWT_CHAVE_ASSINATURA: test
+          SMTP_USERNAME: test
+          SMTP_PASSWORD: test
+          OPENAI_API_KEY: test
         run: mvn clean test
 
 
