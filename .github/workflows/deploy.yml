@@ -1,74 +1,56 @@
-name: CI/CD Pipeline
+name: Deploy and Test
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: admin
-        ports:
-          - 3306:3306
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -padmin"
+          --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+    env:
+      DB_URL: jdbc:mysql://localhost:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: testuser
+      DB_PASSWORD: testpassword
+      JWT_EXPIRACAO: your_jwt_expiracao_value
+      JWT_CHAVE_ASSINATURA: your_jwt_chave_assinatura_value
+      SMTP_USERNAME: your_smtp_username
+      SMTP_PASSWORD: your_smtp_password
+      OPENAI_API_KEY: your_openai_api_key
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'temurin'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Install MySQL client
-        run: sudo apt-get update && sudo apt-get install -y mysql-client
-
-      - name: Wait for MySQL to be ready and create database
+      - name: Wait for MySQL to be ready
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h mysql -uroot -padmin --silent; then
-              echo "MySQL está pronto!"
-              break
-            fi
-            echo "Aguardando MySQL iniciar..."
-            sleep 2
+          until mysqladmin ping -h 127.0.0.1 -P 3306 --silent; do
+            echo "Waiting for MySQL..."
+            sleep 5
           done
-          mysql -h mysql -uroot -padmin -e "CREATE DATABASE IF NOT EXISTS reportai_test;"
 
-      - name: Build with Maven (sem testes)
-        run: mvn clean package -DskipTests
-
-      - name: Run tests
-        env:
-          DB_URL: jdbc:mysql://mysql:3306/reportai_test
-          DB_USERNAME: root
-          DB_PASSWORD: admin
-          JWT_EXPIRACAO: 1000
-          JWT_CHAVE_ASSINATURA: test
-          SMTP_USERNAME: test
-          SMTP_PASSWORD: test
-          OPENAI_API_KEY: test
-        run: mvn test
+      - name: Build and test with Maven
+        run: mvn clean test
