@@ -462,8 +462,8 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("ADM").email("edu@rdo.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("160.410.930-09").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("joao@silva.com").senha("4a0b25a223a6ad641ced6bdf18b7b15d").cpf("839.925.170-47").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("UsuarioADM").email("adm@reportai.com").senha("15dd7a705552261b26df5b5e32190f8f").cpf("160.410.930-09").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Eduardo Azzolin").email("user@reportai.com").senha("f71b02bc59d0f555ec6bbca49ffdc041").cpf("839.925.170-47").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("532.162.220-55").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("540.924.870-88").isDeleted(false).build());
          usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("745.704.400-02").isDeleted(false).build());
@@ -575,7 +575,7 @@ public class StartSeeder implements CommandLineRunner {
                  .categoria(categoriaRepository.findById(8L).get())
                  .isConcluido(false)
                  .isDeleted(false)
-                 .usuario(usuarioRepository.findById(4L).get())
+                 .usuario(usuarioRepository.findById(2L).get())
                  .build());
 
 
@@ -612,49 +612,49 @@ public class StartSeeder implements CommandLineRunner {
       if (imagemRepository.count() == 0) {
 
          // placeholder padrao
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/566a6405-f41c-44f8-9180-95ae776beaf8").registro(registroRepository.findById(1L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/9bdd15b3-9340-4503-9d8e-fbf841f5628d").registro(registroRepository.findById(1L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/f4bf4716-cfeb-4264-a7a8-183814085bac").registro(registroRepository.findById(1L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/14acf4e4-1c78-4614-819e-49e9618d5faa").registro(registroRepository.findById(2L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/eee24435-7050-40b8-89d8-16646120f11c").registro(registroRepository.findById(2L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/31732c87-6c2e-4118-a8b2-9884f6bafbbb").registro(registroRepository.findById(3L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/ebe19c33-2d84-402e-ae14-b8c85fd38384").registro(registroRepository.findById(4L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/5801c9d1-15bb-4465-9c58-8a655015e7db").registro(registroRepository.findById(5L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/bfb31e36-b073-40fa-aa05-6576525193a4").registro(registroRepository.findById(5L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/9e2e9980-91ad-49f7-a5c7-fec4d6675e25").registro(registroRepository.findById(6L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/c679dad0-4b87-426c-93bd-d992bd82a256").registro(registroRepository.findById(6L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/547d9e77-a932-45a7-b536-8d8e3608c6b6").registro(registroRepository.findById(7L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/c93cbbb3-ab2e-4026-927f-177d32cd5d02").registro(registroRepository.findById(8L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/ec7ad7ea-f994-4d60-adc3-a10e5c589743").registro(registroRepository.findById(8L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/7121413e-0148-4dde-b317-eff918aaf8f4").registro(registroRepository.findById(8L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/fd2b6c07-ce31-4f9b-97ca-ed0c989960f7").registro(registroRepository.findById(9L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/f5103477-fdaf-4fa3-b3c8-9fa6aba9acdf").registro(registroRepository.findById(10L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/88c9351a-52d2-49ab-82c5-4ecbc41c2f72").registro(registroRepository.findById(10L).get()).build());
-//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/17e70737-bff7-4249-9209-029dfffffdc6").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/566a6405-f41c-44f8-9180-95ae776beaf8").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/9bdd15b3-9340-4503-9d8e-fbf841f5628d").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/f4bf4716-cfeb-4264-a7a8-183814085bac").registro(registroRepository.findById(1L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/14acf4e4-1c78-4614-819e-49e9618d5faa").registro(registroRepository.findById(2L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/eee24435-7050-40b8-89d8-16646120f11c").registro(registroRepository.findById(2L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/31732c87-6c2e-4118-a8b2-9884f6bafbbb").registro(registroRepository.findById(3L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/ebe19c33-2d84-402e-ae14-b8c85fd38384").registro(registroRepository.findById(4L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/5801c9d1-15bb-4465-9c58-8a655015e7db").registro(registroRepository.findById(5L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/bfb31e36-b073-40fa-aa05-6576525193a4").registro(registroRepository.findById(5L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/9e2e9980-91ad-49f7-a5c7-fec4d6675e25").registro(registroRepository.findById(6L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/c679dad0-4b87-426c-93bd-d992bd82a256").registro(registroRepository.findById(6L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/547d9e77-a932-45a7-b536-8d8e3608c6b6").registro(registroRepository.findById(7L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/c93cbbb3-ab2e-4026-927f-177d32cd5d02").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/ec7ad7ea-f994-4d60-adc3-a10e5c589743").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/7121413e-0148-4dde-b317-eff918aaf8f4").registro(registroRepository.findById(8L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/fd2b6c07-ce31-4f9b-97ca-ed0c989960f7").registro(registroRepository.findById(9L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/f5103477-fdaf-4fa3-b3c8-9fa6aba9acdf").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/88c9351a-52d2-49ab-82c5-4ecbc41c2f72").registro(registroRepository.findById(10L).get()).build());
+         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-padrao/17e70737-bff7-4249-9209-029dfffffdc6").registro(registroRepository.findById(10L).get()).build());
 
          // placeholder dibea
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/08952904-1f3a-44e3-9408-3c3c07f2d40b").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/1dcc4ff2-f4c4-45c3-ad06-507c22c39971").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/305bd8fe-dcea-444e-9fcd-425048474952").registro(registroRepository.findById(1L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/306b65d8-b40c-4e12-b5aa-87066976b69d").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/33960843-2599-45f9-90fe-c1abcd14111a").registro(registroRepository.findById(2L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/33f6ffa2-9f9c-4291-b7a7-99615f9eac04").registro(registroRepository.findById(3L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ad40b688-f7e0-41b8-a67a-c016df5abfb5").registro(registroRepository.findById(4L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/af77bfcb-d957-42ba-b70f-93b9ed7cf8a6").registro(registroRepository.findById(4L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/378e8685-29dc-43fd-911e-326f51e401fb").registro(registroRepository.findById(4L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/4b02f949-cbba-45a0-9de4-72bd45e16a7e").registro(registroRepository.findById(5L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/4b4d9bc8-a337-4784-a618-1ba6e8329ca5").registro(registroRepository.findById(5L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/5194bdbd-bb82-4fa7-91ac-02515551007c").registro(registroRepository.findById(6L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/5b3a0969-833b-4ba2-880d-5d3b0bcba9d9").registro(registroRepository.findById(6L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/72f64e42-4ccd-4544-9d68-19c83f3a653a").registro(registroRepository.findById(7L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/d0a21b7e-b5fd-40eb-be1a-ad3d1c8a2cdb").registro(registroRepository.findById(7L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/bebf81de-7e13-4528-8287-462aeeb9345f").registro(registroRepository.findById(8L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ca152612-b14b-47f8-a914-3f60321e97a8").registro(registroRepository.findById(8L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ce462f9e-0175-426b-afa1-51220e763399").registro(registroRepository.findById(8L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/f8cc64b4-4de3-4339-acb2-056392e2659f").registro(registroRepository.findById(9L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/d2153759-a1f0-4134-a18a-062c99de8648").registro(registroRepository.findById(10L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/e827a889-5ca3-4e4b-9edd-fb8c84e44ac9").registro(registroRepository.findById(10L).get()).build());
-         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/f8cc64b4-4de3-4339-acb2-056392e2659f").registro(registroRepository.findById(10L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/08952904-1f3a-44e3-9408-3c3c07f2d40b").registro(registroRepository.findById(1L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/1dcc4ff2-f4c4-45c3-ad06-507c22c39971").registro(registroRepository.findById(1L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/305bd8fe-dcea-444e-9fcd-425048474952").registro(registroRepository.findById(1L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/306b65d8-b40c-4e12-b5aa-87066976b69d").registro(registroRepository.findById(2L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/33960843-2599-45f9-90fe-c1abcd14111a").registro(registroRepository.findById(2L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/33f6ffa2-9f9c-4291-b7a7-99615f9eac04").registro(registroRepository.findById(3L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ad40b688-f7e0-41b8-a67a-c016df5abfb5").registro(registroRepository.findById(4L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/af77bfcb-d957-42ba-b70f-93b9ed7cf8a6").registro(registroRepository.findById(4L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/378e8685-29dc-43fd-911e-326f51e401fb").registro(registroRepository.findById(4L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/4b02f949-cbba-45a0-9de4-72bd45e16a7e").registro(registroRepository.findById(5L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/4b4d9bc8-a337-4784-a618-1ba6e8329ca5").registro(registroRepository.findById(5L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/5194bdbd-bb82-4fa7-91ac-02515551007c").registro(registroRepository.findById(6L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/5b3a0969-833b-4ba2-880d-5d3b0bcba9d9").registro(registroRepository.findById(6L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/72f64e42-4ccd-4544-9d68-19c83f3a653a").registro(registroRepository.findById(7L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/d0a21b7e-b5fd-40eb-be1a-ad3d1c8a2cdb").registro(registroRepository.findById(7L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/bebf81de-7e13-4528-8287-462aeeb9345f").registro(registroRepository.findById(8L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ca152612-b14b-47f8-a914-3f60321e97a8").registro(registroRepository.findById(8L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/ce462f9e-0175-426b-afa1-51220e763399").registro(registroRepository.findById(8L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/f8cc64b4-4de3-4339-acb2-056392e2659f").registro(registroRepository.findById(9L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/d2153759-a1f0-4134-a18a-062c99de8648").registro(registroRepository.findById(10L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/e827a889-5ca3-4e4b-9edd-fb8c84e44ac9").registro(registroRepository.findById(10L).get()).build());
+//         imagemRepository.save(Imagem.builder().caminho("https://storage.googleapis.com/reportai/registros/placeholder-dibea/f8cc64b4-4de3-4339-acb2-056392e2659f").registro(registroRepository.findById(10L).get()).build());
 
 
       }
