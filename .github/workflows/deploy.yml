@@ -13,10 +13,8 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpassword
+          MYSQL_ROOT_PASSWORD: admin
+          MYSQL_DATABASE: reportai_test
         options: >-
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
@@ -26,14 +24,16 @@ jobs:
           - 3306:3306
 
     env:
-      DB_URL: jdbc:mysql://localhost:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USERNAME: testuser
-      DB_PASSWORD: testpassword
-      JWT_EXPIRACAO: your_jwt_expiracao_value
-      JWT_CHAVE_ASSINATURA: your_jwt_chave_assinatura_value
+      DB_URL: jdbc:mysql://db/reportai
+      DB_USERNAME: root
+      DB_PASSWORD: admin
+      DB_SCHEMA: reportai
+      JWT_EXPIRACAO: 10080
+      JWT_CHAVE_ASSINATURA: ZGlkIHlvdSBrbm93IHRoYXQgdGhlcmUgaMXgYSB0dW5uZWwgdW5kZXIgb2NlYW4gYmx2Pw==
       SMTP_USERNAME: your_smtp_username
       SMTP_PASSWORD: your_smtp_password
       OPENAI_API_KEY: your_openai_api_key
+      WEB_URL: http://localhost:3000
 
     steps:
       - name: Checkout code
