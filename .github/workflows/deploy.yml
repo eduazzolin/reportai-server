@@ -15,7 +15,6 @@ jobs:
         environment:
           MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: reportai_test
-          MYSQL_LOWER_CASE_TABLE_NAMES: 1  # This makes table names case-insensitive
         ports:
           - 3306:3306
         healthcheck:
