@@ -24,10 +24,10 @@ import java.util.Date;
 @Service
 public class JwtService implements JwtRepository {
 
-   @Value("${JWT_EXPIRACAO}")
+   @Value("${jwt.expiracao}")
    private String expiracao;
 
-   @Value("${JWT_CHAVE_ASSINATURA}")
+   @Value("${jwt.chave-assinatura}")
    private String chaveAssinatura;
 
    @Autowired

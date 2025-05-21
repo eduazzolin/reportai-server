@@ -1,0 +1,66 @@
+name: Deploy and Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: admin
+          MYSQL_DATABASE: reportai_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -padmin"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: "17"
+          distribution: "adopt"
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in `seq 1 10`;
+          do
+            mysqladmin ping -h127.0.0.1 -uroot -padmin --silent && break || sleep 5
+          done
+
+      # Configura o cache do Maven para otimizar o tempo de build
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Run tests
+        env:
+          DB_URL: jdbc:mysql://localhost:3306/reportai
+          DB_USERNAME: root
+          DB_PASSWORD: admin
+          JWT_EXPIRACAO: 10080
+          JWT_CHAVE_ASSINATURA: ZGlkIHlvdSBrbm93IHRoYXQgdGhlcmUgaMXgYSB0dW5uZWwgdW5kZXIgb2NlYW4gYmx2Pw==
+          SMTP_USERNAME: your_smtp_username
+          SMTP_PASSWORD: your_smtp_password
+          OPENAI_API_KEY: your_openai_api_key
+          WEB_URL: http://localhost:3000
+        run: mvn clean test

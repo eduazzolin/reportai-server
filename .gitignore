@@ -1,4 +1,8 @@
 HELP.md
+
+*application.properties
+*application-test.properties
+backupenv
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
