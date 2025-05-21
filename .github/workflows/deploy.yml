@@ -15,19 +15,19 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: reportai_test
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
         ports:
           - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -padmin"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       DB_URL: jdbc:mysql://localhost:3306/reportai
       DB_USERNAME: root
       DB_PASSWORD: admin
-      DB_SCHEMA: reportai
+      DB_SCHEMA: reportai_test
       JWT_EXPIRACAO: 10080
       JWT_CHAVE_ASSINATURA: ZGlkIHlvdSBrbm93IHRoYXQgdGhlcmUgaMXgYSB0dW5uZWwgdW5kZXIgb2NlYW4gYmx2Pw==
       SMTP_USERNAME: your_smtp_username
@@ -47,9 +47,9 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: |
-          until mysqladmin ping -h 127.0.0.1 -P 3306 --silent; do
-            echo "Waiting for MySQL..."
-            sleep 5
+          for i in `seq 1 10`;
+          do
+            mysqladmin ping -h127.0.0.1 -uroot -padmin --silent && break || sleep 5
           done
 
       - name: Build and test with Maven
