@@ -75,8 +75,8 @@ public class StartSeeder implements CommandLineRunner {
                          CASE WHEN MAX(C.id) IS NOT NULL THEN TRUE ELSE FALSE END AS fl_possui_agendamento,
                          MAX(C.removida_em)                                       AS dt_ultimo_removido_em
                   FROM registro R
-                           JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT i.is_deleted
-                           LEFT JOIN conclusao_programada C ON c.id_registro = r.id
+                           JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT I.is_deleted
+                           LEFT JOIN conclusao_programada C ON C.id_registro = R.id
                   WHERE NOT R.is_concluido
                     AND NOT R.is_deleted
                     AND R.ID = p_id_registro
