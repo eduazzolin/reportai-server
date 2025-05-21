@@ -18,9 +18,6 @@ jobs:
           MYSQL_LOWER_CASE_TABLE_NAMES: 1  # This makes table names case-insensitive
         ports:
           - 3306:3306
-        command:
-          - --character-set-server=utf8mb4
-          - --collation-server=utf8mb4_general_ci  # Case-insensitive collation
         healthcheck:
           test: mysqladmin ping -padmin
           interval: 10s
