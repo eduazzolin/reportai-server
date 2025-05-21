@@ -82,7 +82,9 @@ public class SecurityConfiguration {
       config.setAllowCredentials(true);
       config.setAllowedOriginPatterns(Arrays.asList(
               "http://localhost:3000",
+              "http://localhost:80",
               "http://app:3000",
+              "http://app:80",
               "https://gerenciador-projeto-tarefa-1.onrender.com"
       ));
       config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

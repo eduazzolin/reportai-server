@@ -163,7 +163,7 @@ public class StartSeeder implements CommandLineRunner {
                                          SET @REGISTROS_LIMITADOS_POR_DISTANCIA = CONCAT(
                                                  ', REGISTROS_LIMITADOS_POR_DISTANCIA AS  (SELECT *, ',
                                                  '                                               (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 AS distancia_do_centro',
-                                                 '                                           FROM REGISTRO ',
+                                                 '                                           FROM registro ',
                                                  '                                           WHERE NOT is_deleted ',
                                                  '                                                AND (SQRT(POW(latitude - ', p_lat, ', 2) + POW(longitude - ', p_long, ', 2))) * 100 <= ', p_distancia,
                                                  '                                                ', p_filtro,
@@ -174,7 +174,7 @@ public class StartSeeder implements CommandLineRunner {
                                         /*
                                          * esta CTE calcula as interações do tipo RELEVANTE por registro, serve para ordenar depois
                                          */
-                                         SET @INTERACOES_RELEVANTES = ' WITH INTERACOES_RELEVANTES AS (SELECT ID_REGISTRO, COUNT(ID) AS interacoesRelevante FROM INTERACAO WHERE TIPO = ''RELEVANTE'' GROUP BY ID_REGISTRO ) ';
+                                         SET @INTERACOES_RELEVANTES = ' WITH INTERACOES_RELEVANTES AS (SELECT ID_REGISTRO, COUNT(ID) AS interacoesRelevante FROM interacao WHERE TIPO = ''RELEVANTE'' GROUP BY ID_REGISTRO ) ';
               
               
                                          /*
@@ -218,7 +218,7 @@ public class StartSeeder implements CommandLineRunner {
                                                      '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,                   ',
                                                      '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,                   ',
                                                      '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante                  ',
-                                                     ' FROM REGISTRO r                                                                                    ',
+                                                     ' FROM registro r                                                                                    ',
                                                      '          LEFT JOIN categoria c ON r.categoria_id = c.id                                            ',
                                                      '          LEFT JOIN interacao i ON i.id_registro = r.id                                             ',
                                                      '          LEFT JOIN conclusao_programada cp ON r.id = cp.id_registro AND cp.removida_em IS NULL     ');
@@ -285,7 +285,7 @@ public class StartSeeder implements CommandLineRunner {
                           '        SUM(CASE WHEN i.tipo = ''CONCLUIDO'' THEN 1 ELSE 0 END)   AS qtConcluido,       ',
                           '        SUM(CASE WHEN i.tipo = ''RELEVANTE'' THEN 1 ELSE 0 END)   AS qtRelevante,       ',
                           '        SUM(CASE WHEN i.tipo = ''IRRELEVANTE'' THEN 1 ELSE 0 END) AS qtIrrelevante      ',
-                          ' FROM REGISTRO r                                                                        ',
+                          ' FROM registro r                                                                        ',
                           '          LEFT JOIN categoria c ON r.categoria_id = c.id                                ',
                           '          LEFT JOIN interacao i ON i.id_registro = r.id                                 ');
               
@@ -401,11 +401,11 @@ public class StartSeeder implements CommandLineRunner {
               CREATE PROCEDURE SP_RELATORIO_BAIRRO(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
                   SELECT 
-                      BAIRRO,
-                      SUM(CASE WHEN IS_CONCLUIDO THEN 1 ELSE 0 END) AS CONCLUIDO,
-                      SUM(CASE WHEN IS_CONCLUIDO THEN 0 ELSE 1 END) AS ATIVO,
+                      bairro,
+                      SUM(CASE WHEN is_concluido THEN 1 ELSE 0 END) AS CONCLUIDO,
+                      SUM(CASE WHEN is_concluido THEN 0 ELSE 1 END) AS ATIVO,
                       COUNT(*) AS QUANTIDADE
-                  FROM REGISTRO
+                  FROM registro
                   WHERE NOT IS_DELETED
                     AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY BAIRRO
@@ -420,7 +420,7 @@ public class StartSeeder implements CommandLineRunner {
                       SUM(CASE WHEN IS_CONCLUIDO THEN 1 ELSE 0 END) AS CONCLUIDO,
                       SUM(CASE WHEN IS_CONCLUIDO THEN 0 ELSE 1 END) AS ATIVO,
                       COUNT(*) AS QUANTIDADE
-                  FROM REGISTRO R
+                  FROM registro R
                            LEFT JOIN CATEGORIA C ON C.ID = R.categoria_id
                   WHERE NOT R.IS_DELETED
                     AND  CAST(R.DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
@@ -432,7 +432,7 @@ public class StartSeeder implements CommandLineRunner {
               CREATE PROCEDURE SP_RELATORIO_STATUS(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
                   SELECT CASE WHEN IS_CONCLUIDO THEN 'Resolvido' ELSE 'Aberto' END AS STATUS, COUNT(*) QUANTIDADE
-                  FROM REGISTRO
+                  FROM registro
                   WHERE NOT IS_DELETED
                     AND CAST(DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
                   GROUP BY IS_CONCLUIDO
