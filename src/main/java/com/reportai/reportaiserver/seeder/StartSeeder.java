@@ -76,7 +76,7 @@ public class StartSeeder implements CommandLineRunner {
                          MAX(C.removida_em)                                       AS dt_ultimo_removido_em
                   FROM registro R
                            JOIN interacao I ON I.id_registro = R.ID AND I.TIPO = 'CONCLUIDO' AND NOT i.is_deleted
-                           LEFT JOIN conclusao_programada c ON c.id_registro = r.id
+                           LEFT JOIN conclusao_programada C ON c.id_registro = r.id
                   WHERE NOT R.is_concluido
                     AND NOT R.is_deleted
                     AND R.ID = p_id_registro
