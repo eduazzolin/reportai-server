@@ -27,7 +27,6 @@ jobs:
       DB_URL: jdbc:mysql://localhost:3306/reportai
       DB_USERNAME: root
       DB_PASSWORD: admin
-      DB_SCHEMA: reportai_test
       JWT_EXPIRACAO: 10080
       JWT_CHAVE_ASSINATURA: ZGlkIHlvdSBrbm93IHRoYXQgdGhlcmUgaMXgYSB0dW5uZWwgdW5kZXIgb2NlYW4gYmx2Pw==
       SMTP_USERNAME: your_smtp_username
@@ -51,6 +50,11 @@ jobs:
           do
             mysqladmin ping -h127.0.0.1 -uroot -padmin --silent && break || sleep 5
           done
+
+      - name: Initialize database schema
+        run: |
+          mysql -h127.0.0.1 -uroot -padmin reportai_test < src/main/resources/db/migration/V1__Initial_schema.sql
+          mysql -h127.0.0.1 -uroot -padmin reportai_test -e "SHOW TABLES;"
 
       - name: Build and test with Maven
         run: mvn clean test
