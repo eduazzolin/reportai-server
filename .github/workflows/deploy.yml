@@ -22,7 +22,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --mount type=bind,source=${{ github.workspace }}/.github/mysql-conf.d/my.cnf,target=/etc/mysql/conf.d/my.cnf
+          
 
     env:
       DB_URL: jdbc:mysql://localhost:3306/reportai
