@@ -12,16 +12,17 @@ jobs:
     services:
       mysql:
         image: mysql:8.0
-        environment:
+        env:
           MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: reportai_test
         ports:
           - 3306:3306
-        healthcheck:
-          test: mysqladmin ping -padmin
-          interval: 10s
-          timeout: 5s
-          retries: 5
+        options: >-
+          --health-cmd "mysqladmin ping -padmin"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --mount type=bind,source=${{ github.workspace }}/.github/mysql-conf.d/my.cnf,target=/etc/mysql/conf.d/my.cnf
 
     env:
       DB_URL: jdbc:mysql://localhost:3306/reportai
