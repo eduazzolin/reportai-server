@@ -24,7 +24,7 @@ jobs:
           - 3306:3306
 
     env:
-      DB_URL: jdbc:mysql://db/reportai
+      DB_URL: jdbc:mysql://localhost:3306/reportai
       DB_USERNAME: root
       DB_PASSWORD: admin
       DB_SCHEMA: reportai
