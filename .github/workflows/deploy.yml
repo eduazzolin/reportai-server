@@ -12,16 +12,20 @@ jobs:
     services:
       mysql:
         image: mysql:8.0
-        env:
+        environment:
           MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: reportai_test
+          MYSQL_LOWER_CASE_TABLE_NAMES: 1  # This makes table names case-insensitive
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -padmin"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        command:
+          - --character-set-server=utf8mb4
+          - --collation-server=utf8mb4_general_ci  # Case-insensitive collation
+        healthcheck:
+          test: mysqladmin ping -padmin
+          interval: 10s
+          timeout: 5s
+          retries: 5
 
     env:
       DB_URL: jdbc:mysql://localhost:3306/reportai
@@ -50,11 +54,6 @@ jobs:
           do
             mysqladmin ping -h127.0.0.1 -uroot -padmin --silent && break || sleep 5
           done
-
-      - name: Initialize database schema
-        run: |
-          mysql -h127.0.0.1 -uroot -padmin reportai_test < src/main/resources/db/migration/V1__Initial_schema.sql
-          mysql -h127.0.0.1 -uroot -padmin reportai_test -e "SHOW TABLES;"
 
       - name: Build and test with Maven
         run: mvn clean test
