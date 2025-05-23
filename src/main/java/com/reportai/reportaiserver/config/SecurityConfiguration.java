@@ -84,9 +84,11 @@ public class SecurityConfiguration {
               "http://localhost:3000",
               "http://localhost:80",
               "http://app:4000",
-              "https://34.29.106.234:80",
-              "https://34.29.106.234:3000",
-              "https://34.29.106.234:4000"
+              "https://35.208.177.173:80",
+              "https://35.208.177.173:3000",
+              "https://dominioeduardo2025.space",
+              "https://reportai.dominioeduardo2025.space"
+
       ));
       config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
       config.setAllowedHeaders(List.of("*"));
