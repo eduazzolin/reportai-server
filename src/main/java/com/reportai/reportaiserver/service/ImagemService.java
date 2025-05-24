@@ -9,16 +9,17 @@ import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
-import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.ImagemRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -36,8 +37,8 @@ public class ImagemService {
    @Value("${gcs.bucket-name}")
    private String bucketName;
 
-   @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
-   private String googleApplicationCredentials;
+   @Value("classpath:gcloud-credentials.json")
+   private Resource googleApplicationCredentials;
 
    /**
     * Salva uma imagem no Google Cloud Storage e no banco de dados.
@@ -106,10 +107,9 @@ public class ImagemService {
     */
    public String uploadParaGCS(MultipartFile file, Long idRegistro) throws IOException {
 
-      // #ToDo Poderia ser um serice do Google
       Storage storage = StorageOptions
               .newBuilder()
-              .setCredentials(GoogleCredentials.fromStream(new FileInputStream(googleApplicationCredentials)))
+              .setCredentials(GoogleCredentials.fromStream(googleApplicationCredentials.getInputStream()))
               .setProjectId("reportai-453222").build().getService();
 
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -121,7 +121,7 @@ public class ImagemService {
 
       byte[] compressedImage = outputStream.toByteArray();
 
-      String fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID().toString();
+      String fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID();
       BlobId blobId = BlobId.of(bucketName, fileName);
       BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
               .setContentType(file.getContentType())
@@ -141,7 +141,7 @@ public class ImagemService {
       String fileName = url.substring(url.indexOf("registros/"));
       Storage storage = StorageOptions
               .newBuilder()
-              .setCredentials(GoogleCredentials.fromStream(new FileInputStream(googleApplicationCredentials)))
+              .setCredentials(GoogleCredentials.fromStream(googleApplicationCredentials.getInputStream()))
               .setProjectId("reportai-453222").build().getService();
       BlobId blobId = BlobId.of(bucketName, fileName);
       storage.delete(blobId);
