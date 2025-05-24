@@ -80,19 +80,10 @@ public class SecurityConfiguration {
    public CorsConfigurationSource corsConfigurationSource() {
       CorsConfiguration config = new CorsConfiguration();
       config.setAllowCredentials(true);
-      config.setAllowedOriginPatterns(Arrays.asList(
-              "http://localhost:3000",
-              "http://localhost:80",
-              "http://app:4000",
-              "https://35.208.177.173:80",
-              "https://35.208.177.173:3000",
-              "https://dominioeduardo2025.space",
-              "https://reportai.dominioeduardo2025.space"
-
-      ));
+      config.setAllowedOriginPatterns(List.of("*"));
       config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
       config.setAllowedHeaders(List.of("*"));
-      config.setExposedHeaders(List.of("Authorization")); // If you need to expose any headers
+      config.setExposedHeaders(List.of("Authorization"));
       UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
       source.registerCorsConfiguration("/**", config);
 
