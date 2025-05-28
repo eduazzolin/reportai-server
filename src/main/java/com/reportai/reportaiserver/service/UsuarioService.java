@@ -8,12 +8,12 @@ import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.Usuario;
 import com.reportai.reportaiserver.repository.UsuarioRepository;
+import com.reportai.reportaiserver.utils.CriptografiaUtils;
 import com.reportai.reportaiserver.utils.Validacoes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -27,6 +27,12 @@ public class UsuarioService {
 
    public Usuario salvar(Usuario usuario) {
       validacoes.validarUsuario(usuario);
+      usuario.setSenha(CriptografiaUtils.criptografar(usuario.getSenha()));
+      return repository.save(usuario);
+   }
+
+   public Usuario editar(Usuario usuario) {
+      validacoes.validarUsuario(usuario);
       return repository.save(usuario);
    }
 
@@ -38,7 +44,7 @@ public class UsuarioService {
          throw new CustomException(ErrorDictionary.USUARIO_NAO_ENCONTRADO);
       }
 
-      if (!Objects.equals(senha, usuario.get().getSenha())) {
+      if (!CriptografiaUtils.verificarCorrespondencia(senha, usuario.get().getSenha())) {
          throw new CustomException(ErrorDictionary.SENHA_INVALIDA);
       }
 
@@ -94,7 +100,7 @@ public class UsuarioService {
    public Usuario alterarSenha(Usuario usuario) {
       Usuario usuarioEncontrado = buscarPorId(usuario.getId());
       validacoes.validarSenha(usuario);
-      usuarioEncontrado.setSenha(usuario.getSenha());
+      usuarioEncontrado.setSenha(CriptografiaUtils.criptografar(usuario.getSenha()));
       return repository.save(usuarioEncontrado);
    }
 

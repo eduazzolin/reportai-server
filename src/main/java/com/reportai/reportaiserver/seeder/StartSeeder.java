@@ -460,11 +460,11 @@ public class StartSeeder implements CommandLineRunner {
 
    private void loadUsuario() {
       if (usuarioRepository.count() == 0) {
-         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("UsuarioADM").email("adm@reportai.com").senha("15dd7a705552261b26df5b5e32190f8f").cpf("160.410.930-09").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Eduardo Azzolin").email("user@reportai.com").senha("f71b02bc59d0f555ec6bbca49ffdc041").cpf("839.925.170-47").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("123456").cpf("532.162.220-55").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("123456").cpf("540.924.870-88").isDeleted(false).build());
-         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("123456").cpf("745.704.400-02").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(ADMIN).nome("UsuarioADM").email("adm@reportai.com").senha("$2a$10$8hgBJE/yHhE.zUXD1TecoO9.lY77x0UxLnXR6S6JhX0Mo/EOE234C").cpf("160.410.930-09").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("João Silva").email("user@reportai.com").senha("$2a$10$4UGjigwF75Y8BKyeRtnDM.miLFkRi8.AcJ1aFlcSD6N11EN1LpYTa").cpf("839.925.170-47").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Maria Marques").email("maria@marques.com").senha("$2a$10$e1uB2k4cvYzDw0ZVjuegMOeEIiQSUgug6bu0OcxELTlfS4EMgc.Zi").cpf("532.162.220-55").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Joaquim Silva").email("joaquim@silva.com").senha("$2a$10$raw1tiGfMm6jYPeVRtwwh.sGzOatV3dDRoxnY7BOY4fmNURQF1GEu").cpf("540.924.870-88").isDeleted(false).build());
+         usuarioRepository.save(Usuario.builder().role(USUARIO).nome("Márcio Mendes").email("marcio@mendes.com").senha("$2a$10$o/7apx/WgfcuRjGza72khelJDR0dOxwbaiduZjHveAV1pOBBJkNIq").cpf("745.704.400-02").isDeleted(false).build());
       }
    }
 

@@ -50,8 +50,10 @@ public class UsuarioController {
    @PostMapping
    public ResponseEntity<UsuarioDTO> salvar(@RequestBody Usuario usuario, @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
+      Usuario usuarioSalvo = null;
 
       if (usuario.getId() != null) {
+         /* se o usuário já existe, só pode editar o nome ou email */
          Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
 
          if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
@@ -59,16 +61,18 @@ public class UsuarioController {
          }
 
          Usuario usuarioExistente = service.buscarPorId(usuario.getId());
+
          usuarioExistente.setNome(usuario.getNome());
          usuarioExistente.setEmail(usuario.getEmail());
-         if (usuario.getSenha() != null) {
-            usuarioExistente.setSenha(usuario.getSenha());
-         }
+
          usuario = usuarioExistente;
+         usuarioSalvo = service.editar(usuario);
+
       } else {
+         /* se o usuário não existe, cria um novo */
          usuario.setRole(Usuario.Roles.USUARIO);
+         usuarioSalvo = service.salvar(usuario);
       }
-      Usuario usuarioSalvo = service.salvar(usuario);
       return ResponseEntity.ok(UsuarioMapper.toDTO(usuarioSalvo));
    }
 
