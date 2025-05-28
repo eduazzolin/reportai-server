@@ -413,16 +413,16 @@ public class StartSeeder implements CommandLineRunner {
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_RELATORIO_CATEGORIA(IN p_data_inicio DATETIME, IN p_data_fim DATETIME)
               BEGIN
-                  SELECT 
-                      C.NOME AS CATEGORIA,
-                      SUM(CASE WHEN IS_CONCLUIDO THEN 1 ELSE 0 END) AS CONCLUIDO,
-                      SUM(CASE WHEN IS_CONCLUIDO THEN 0 ELSE 1 END) AS ATIVO,
+                  SELECT
+                      C.nome AS CATEGORIA,
+                      SUM(CASE WHEN is_concluido THEN 1 ELSE 0 END) AS CONCLUIDO,
+                      SUM(CASE WHEN is_concluido THEN 0 ELSE 1 END) AS ATIVO,
                       COUNT(*) AS QUANTIDADE
                   FROM registro R
-                           LEFT JOIN CATEGORIA C ON C.ID = R.categoria_id
-                  WHERE NOT R.IS_DELETED
-                    AND  CAST(R.DT_CRIACAO AS DATE) BETWEEN p_data_inicio AND p_data_fim
-                  GROUP BY C.NOME
+                           LEFT JOIN categoria C ON C.id = R.categoria_id
+                  WHERE NOT R.is_deleted
+                    AND  CAST(R.dt_criacao AS DATE) BETWEEN p_data_inicio AND p_data_fim
+                  GROUP BY C.nome
                   ORDER BY QUANTIDADE DESC;
               END;
               """);

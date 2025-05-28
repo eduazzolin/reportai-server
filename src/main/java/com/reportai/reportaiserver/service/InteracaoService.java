@@ -32,6 +32,8 @@ public class InteracaoService {
    /**
     * Salva uma interação no banco de dados.
     * Se a interação for do tipo CONCLUIDO, chama a proc SP_INCLUIR_RESOLUCAO_AUTOMATICA.
+    * Se a interação for do tipo RELEVANTE ou IRRELEVANTE, verifica se já existe uma interação do outro tipo
+    * para o mesmo registro e usuário, e se existir, marca essa interação como deletada.
     *
     * @param interacao
     * @return interacao salva
@@ -39,6 +41,23 @@ public class InteracaoService {
    public Interacao salvar(Interacao interacao) {
       validacoes.validarInteracao(interacao);
       interacao = repository.save(interacao);
+
+      if (interacao.getTipo().equals(Interacao.TipoInteracao.RELEVANTE)) {
+         Interacao interacaoIrrelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(interacao.getRegistro(), Interacao.TipoInteracao.IRRELEVANTE, interacao.getUsuario(), false);
+         if (interacaoIrrelevante != null) {
+            interacaoIrrelevante.setIsDeleted(true);
+            repository.save(interacaoIrrelevante);
+         }
+      }
+
+      if (interacao.getTipo().equals(Interacao.TipoInteracao.IRRELEVANTE)) {
+         Interacao interacaoRelevante = repository.findByRegistroAndTipoAndUsuarioAndIsDeleted(interacao.getRegistro(), Interacao.TipoInteracao.RELEVANTE, interacao.getUsuario(), false);
+         if (interacaoRelevante != null) {
+            interacaoRelevante.setIsDeleted(true);
+            repository.save(interacaoRelevante);
+         }
+      }
+
       if (interacao.getTipo().equals(Interacao.TipoInteracao.CONCLUIDO)) {
          chamarProcedureIncluirResolucaoAutomatica(interacao.getRegistro().getId());
       }
