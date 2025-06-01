@@ -117,7 +117,7 @@ public class StartSeeder implements CommandLineRunner {
               END;
               """);
 
-      jdbcTemplate.execute("SET GLOBAL event_scheduler = ON;");
+//      jdbcTemplate.execute("SET GLOBAL event_scheduler = ON;"); comentado, pois no Google Cloud SQL não é possível habilitar o event scheduler desta forma e ele já vem habilitado por padrão.
       jdbcTemplate.execute("""
                        CREATE EVENT IF NOT EXISTS EV_CONCLUSAO_AUTOMATICA
                        ON SCHEDULE EVERY 1 DAY
