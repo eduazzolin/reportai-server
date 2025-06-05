@@ -13,49 +13,82 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+   @Autowired
+   private JavaMailSender mailSender;
 
-    @Value("${SMTP_FROM}")
-    private String remetente;
+   @Value("${SMTP_FROM}")
+   private String remetente;
 
-    @Value("${WEB_URL}")
-    private String webURL;
+   @Value("${WEB_URL}")
+   private String webURL;
 
-    public boolean enviarEmailRecuperacaoSenha(String to, String codigo) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+   public boolean enviarEmailRecuperacaoSenha(String to, String codigo) {
+      try {
+         MimeMessage message = mailSender.createMimeMessage();
+         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(remetente);
-            helper.setTo(to);
-            helper.setSubject("Recuperação de Senha - Reportaí");
+         helper.setFrom(remetente);
+         helper.setTo(to);
+         helper.setSubject("Recuperação de Senha - Reportaí");
 
-            String linkRedefinicao = webURL + "/redefinir-senha?token=" + codigo + "&email=" + to;
+         String linkRedefinicao = webURL + "/redefinir-senha?token=" + codigo + "&email=" + to;
 
-            String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">" +
-                    "<div style=\"text-align: center; margin-bottom: 20px;\">" +
-                    "<img src=\"https://storage.googleapis.com/reportai/resources/logo.png\" alt=\"Reportaí\" style=\"max-width: 150px;\">" +
-                    "</div>" +
-                    "<h2 style=\"color: #333;\">Recuperação de Senha</h2>" +
-                    "<p style=\"color: #555;\">Olá,</p>" +
-                    "<p style=\"color: #555;\">Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Reportaí</strong>. Caso você não tenha solicitado essa alteração, pode ignorar este email.</p>" +
-                    "<p style=\"color: #555;\">Para redefinir sua senha de forma segura, clique no botão abaixo:</p>" +
-                    "<div style=\"text-align: center; margin: 30px 0;\">" +
-                    "<a href=\"" + linkRedefinicao + "\" style=\"background-color: #ffca2c; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-size: 16px;\">Redefinir Senha</a>" +
-                    "</div>" +
-                    "<p style=\"color: #999; font-size: 12px;\">Se o botão acima não funcionar, copie e cole o seguinte link no seu navegador:</p>" +
-                    "<p style=\"word-break: break-all; color: #1976d2; font-size: 12px;\"><a href=\"" + linkRedefinicao + "\">" + linkRedefinicao + "</a></p>" +
-                    "<hr style=\"border:none; border-top:1px solid #eee; margin:20px 0\">" +
-                    "<p style=\"color: #aaa; font-size: 12px; text-align: center;\">Este é um email automático enviado pelo sistema Reportaí. Por favor, não responda a este endereço.</p>" +
-                    "</div>";
+         String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">" +
+                 "<div style=\"text-align: center; margin-bottom: 20px;\">" +
+                 "<img src=\"https://storage.googleapis.com/reportai/resources/logo.png\" alt=\"Reportaí\" style=\"max-width: 150px;\">" +
+                 "</div>" +
+                 "<h2 style=\"color: #333;\">Recuperação de Senha</h2>" +
+                 "<p style=\"color: #555;\">Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Reportaí</strong>. Caso você não tenha solicitado essa alteração, pode ignorar este email.</p>" +
+                 "<p style=\"color: #555;\">Para redefinir sua senha de forma segura, clique no botão abaixo:</p>" +
+                 "<div style=\"text-align: center; margin: 30px 0;\">" +
+                 "<a href=\"" + linkRedefinicao + "\" style=\"background-color: #ffca2c; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-size: 16px;\">Redefinir Senha</a>" +
+                 "</div>" +
+                 "<p style=\"color: #999; font-size: 12px;\">Se o botão acima não funcionar, copie e cole o seguinte link no seu navegador:</p>" +
+                 "<p style=\"word-break: break-all; color: #1976d2; font-size: 12px;\"><a href=\"" + linkRedefinicao + "\">" + linkRedefinicao + "</a></p>" +
+                 "<hr style=\"border:none; border-top:1px solid #eee; margin:20px 0\">" +
+                 "<p style=\"color: #aaa; font-size: 12px; text-align: center;\">Este é um email automático enviado pelo sistema Reportaí. Por favor, não responda a este endereço.</p>" +
+                 "</div>";
 
-            helper.setText(content, true);
+         helper.setText(content, true);
 
-            mailSender.send(message);
-            return true;
-        } catch (MessagingException e) {
-            throw new CustomException(ErrorDictionary.ERRO_EMAIL);
-        }
-    }
+         mailSender.send(message);
+         return true;
+      } catch (MessagingException e) {
+         throw new CustomException(ErrorDictionary.ERRO_EMAIL);
+      }
+   }
+
+   public boolean enviarEmailSegundoFator(String to, String codigo) {
+      try {
+         MimeMessage message = mailSender.createMimeMessage();
+         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+         helper.setFrom(remetente);
+         helper.setTo(to);
+         helper.setSubject("Autenticação de Dois Fatores - Reportaí");
+
+         String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;\">" +
+                 "<div style=\"text-align: center; margin-bottom: 20px;\">" +
+                 "<img src=\"https://storage.googleapis.com/reportai/resources/logo.png\" alt=\"Reportaí\" style=\"max-width: 150px;\">" +
+                 "</div>" +
+                 "<h2 style=\"color: #333;\">Código de Verificação</h2>" +
+                 "<p style=\"color: #555;\">Olá,</p>" +
+                 "<p style=\"color: #555;\">Para concluir seu login no <strong>Reportaí</strong>, insira o seguinte código de verificação:</p>" +
+                 "<div style=\"text-align: center; margin: 30px 0;\">" +
+                 "<span style=\"display: inline-block; background-color: #f5f5f5; padding: 12px 24px; font-size: 24px; font-weight: bold; letter-spacing: 2px; border-radius: 5px;\">" + codigo + "</span>" +
+                 "</div>" +
+                 "<p style=\"color: #555;\">Esse código é 30 minutos. Se você não tentou fazer login, recomendamos alterar sua senha.</p>" +
+                 "<hr style=\"border:none; border-top:1px solid #eee; margin:20px 0\">" +
+                 "<p style=\"color: #aaa; font-size: 12px; text-align: center;\">Este é um email automático enviado pelo sistema Reportaí. Por favor, não responda a este endereço.</p>" +
+                 "</div>";
+
+         helper.setText(content, true);
+
+         mailSender.send(message);
+         return true;
+      } catch (MessagingException e) {
+         throw new CustomException(ErrorDictionary.ERRO_EMAIL);
+      }
+   }
+
 }

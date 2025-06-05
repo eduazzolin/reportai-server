@@ -1,18 +1,12 @@
 package com.reportai.reportaiserver.controller;
 
-import com.reportai.reportaiserver.dto.TokenDTO;
-import com.reportai.reportaiserver.dto.TokenSenhaDTO;
-import com.reportai.reportaiserver.dto.UsuarioDTO;
-import com.reportai.reportaiserver.dto.UsuariosAdminPaginadoDTO;
+import com.reportai.reportaiserver.dto.*;
 import com.reportai.reportaiserver.exception.CustomException;
 import com.reportai.reportaiserver.exception.ErrorDictionary;
 import com.reportai.reportaiserver.mapper.UsuarioMapper;
 import com.reportai.reportaiserver.model.CodigoRecuperacaoSenha;
 import com.reportai.reportaiserver.model.Usuario;
-import com.reportai.reportaiserver.service.CodigoRecuperacaoSenhaService;
-import com.reportai.reportaiserver.service.EmailService;
-import com.reportai.reportaiserver.service.JwtService;
-import com.reportai.reportaiserver.service.UsuarioService;
+import com.reportai.reportaiserver.service.*;
 import com.reportai.reportaiserver.utils.CriptografiaUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +29,9 @@ public class UsuarioController {
 
    @Autowired
    private CodigoRecuperacaoSenhaService codigoRecuperacaoSenhaService;
+
+   @Autowired
+   private SegundoFatorAutenticacaoService segundoFatorAutenticacaoService;
 
    @Autowired
    private JwtService jwtService;
@@ -71,6 +68,7 @@ public class UsuarioController {
       } else {
          /* se o usuário não existe, cria um novo */
          usuario.setRole(Usuario.Roles.USUARIO);
+         usuario.setSegundoFator(false);
          usuarioSalvo = service.salvar(usuario);
       }
       return ResponseEntity.ok(UsuarioMapper.toDTO(usuarioSalvo));
@@ -165,13 +163,33 @@ public class UsuarioController {
     * @return TokenDTO com o token JWT gerado
     */
    @PostMapping("/autenticar")
-   public ResponseEntity<?> autenticar(@RequestBody Usuario usuario) {
-      Usuario usuarioAutenticado = service.autenticar(usuario.getEmail(), usuario.getSenha());
+   public ResponseEntity<?> autenticar(@RequestBody AutenticacaoRequestDTO autenticacaoRequestDTO) {
+      Usuario usuarioAutenticado = service.autenticar(autenticacaoRequestDTO.getEmail(), autenticacaoRequestDTO.getSenha());
+
+      if (usuarioAutenticado.getSegundoFator()) {
+
+         if (autenticacaoRequestDTO.getCodigoSegundoFator() != null) {
+
+            segundoFatorAutenticacaoService.verificarCodigo(usuarioAutenticado, autenticacaoRequestDTO.getCodigoSegundoFator());
+
+         } else {
+
+            String codigo = segundoFatorAutenticacaoService.gerarCodigoDescriptografado();
+            segundoFatorAutenticacaoService.salvar(usuarioAutenticado, codigo);
+            boolean resultadoEmail = emailService.enviarEmailSegundoFator(usuarioAutenticado.getEmail(), codigo);
+            if (!resultadoEmail) {
+               throw new CustomException(ErrorDictionary.ERRO_EMAIL);
+            }
+            return ResponseEntity.ok().body(usuarioAutenticado.getEmail());
+         }
+
+
+      }
+
       LocalDateTime dataExpiracao = jwtService.gerarDataExpiracao();
-
       TokenDTO tokenDTO = TokenDTO.builder().id(usuarioAutenticado.getId()).nomeUsuario(usuarioAutenticado.getNome()).token(jwtService.gerarToken(usuarioAutenticado)).horaExpiracao(dataExpiracao.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).build();
-
       return ResponseEntity.ok(tokenDTO);
+
    }
 
 

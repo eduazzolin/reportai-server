@@ -35,6 +35,9 @@ public class Usuario {
 
    private String senha;
 
+   @Column()
+   private Boolean segundoFator = false;
+
    @CreationTimestamp
    @Column(updatable = false)
    private LocalDateTime dtCriacao;
@@ -42,6 +45,7 @@ public class Usuario {
    @UpdateTimestamp
    @Column()
    private LocalDateTime dtModificacao;
+
 
    @Column()
    private Boolean isDeleted = false;
