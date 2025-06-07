@@ -24,6 +24,8 @@ public enum ErrorDictionary {
    ,REGISTRO_JA_CONCLUIDO("ERRO-020", "Registro já está concluído.")
    ,TOKEN_INVALIDO("ERRO-021", "Erro de autenticação.")
    ,ERRO_EMAIL("ERRO-022", "Erro ao enviar email.")
+   ,CODIGO_VERIFICACAO_INVALIDO("ERRO-023", "Código de verificação inválido.")
+   ,CODIGO_VERIFICACAO_EXPIRADO("ERRO-024", "Código de verificação expirado.")
    ;
    private final String codigo;
    private final String descricao;

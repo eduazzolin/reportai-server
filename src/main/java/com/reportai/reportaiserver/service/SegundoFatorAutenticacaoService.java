@@ -65,11 +65,13 @@ public class SegundoFatorAutenticacaoService {
    public void verificarCodigo(Usuario usuario, String codigoSegundoFator) {
 
       SegundoFatorAutenticacao segundoFatorAutenticacao = buscarUltimoPorUsuario(usuario);
+
       if (!CriptografiaUtils.verificarCorrespondencia(codigoSegundoFator, segundoFatorAutenticacao.getCodigo())) {
-         throw new CustomException(ErrorDictionary.TOKEN_INVALIDO);
+         throw new CustomException(ErrorDictionary.CODIGO_VERIFICACAO_INVALIDO);
       }
+
       if (segundoFatorAutenticacao.getDtCriacao().plusMinutes(30).isBefore(LocalDateTime.now())) {
-         throw new CustomException(ErrorDictionary.TOKEN_INVALIDO);
+         throw new CustomException(ErrorDictionary.CODIGO_VERIFICACAO_EXPIRADO);
       }
       utilizarCodigo(segundoFatorAutenticacao);
 

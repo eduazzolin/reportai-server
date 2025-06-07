@@ -15,6 +15,11 @@ public class TokenDTO {
    private String horaExpiracao;
    private String nomeUsuario;
    private String token;
+   private Status status;
+
+   public enum Status {
+      AGUARDANDO_SEGUNDO_FATOR, OK
+   }
 
 
 }

@@ -61,6 +61,7 @@ public class UsuarioController {
 
          usuarioExistente.setNome(usuario.getNome());
          usuarioExistente.setEmail(usuario.getEmail());
+         usuarioExistente.setSegundoFator(usuario.getSegundoFator());
 
          usuario = usuarioExistente;
          usuarioSalvo = service.editar(usuario);
@@ -163,32 +164,55 @@ public class UsuarioController {
     * @return TokenDTO com o token JWT gerado
     */
    @PostMapping("/autenticar")
-   public ResponseEntity<?> autenticar(@RequestBody AutenticacaoRequestDTO autenticacaoRequestDTO) {
+   public ResponseEntity<TokenDTO> autenticar(@RequestBody AutenticacaoRequestDTO autenticacaoRequestDTO) {
+
+      // Verifica se o email e senha batem
       Usuario usuarioAutenticado = service.autenticar(autenticacaoRequestDTO.getEmail(), autenticacaoRequestDTO.getSenha());
 
+      // Se o usuário possuir segundo fator:
       if (usuarioAutenticado.getSegundoFator()) {
 
-         if (autenticacaoRequestDTO.getCodigoSegundoFator() != null) {
+         // Caso o código esteja na requisição:
+         if (autenticacaoRequestDTO.getCodigoSegundoFator() != null && !autenticacaoRequestDTO.getCodigoSegundoFator().isEmpty()) {
 
+            // Valida e utiliza o código
             segundoFatorAutenticacaoService.verificarCodigo(usuarioAutenticado, autenticacaoRequestDTO.getCodigoSegundoFator());
 
+         // Se o código não está na requisição
          } else {
 
+            // Cria um código novo
             String codigo = segundoFatorAutenticacaoService.gerarCodigoDescriptografado();
+            // System.out.println("\n\n\n-------------\nCódigo de segundo fator: " + codigo + "\n");
+
+            // Envia por email
             segundoFatorAutenticacaoService.salvar(usuarioAutenticado, codigo);
             boolean resultadoEmail = emailService.enviarEmailSegundoFator(usuarioAutenticado.getEmail(), codigo);
             if (!resultadoEmail) {
                throw new CustomException(ErrorDictionary.ERRO_EMAIL);
             }
-            return ResponseEntity.ok().body(usuarioAutenticado.getEmail());
-         }
 
+            // Retorna o status de aguardar segundo fator
+            return ResponseEntity.ok(TokenDTO
+                    .builder()
+                    .status(TokenDTO.Status.AGUARDANDO_SEGUNDO_FATOR)
+                    .build()
+            );
+         }
 
       }
 
+      // Se chegou aqui, o usuário está autenticado e o segundo fator foi validado ou não é necessário
       LocalDateTime dataExpiracao = jwtService.gerarDataExpiracao();
-      TokenDTO tokenDTO = TokenDTO.builder().id(usuarioAutenticado.getId()).nomeUsuario(usuarioAutenticado.getNome()).token(jwtService.gerarToken(usuarioAutenticado)).horaExpiracao(dataExpiracao.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).build();
-      return ResponseEntity.ok(tokenDTO);
+      return ResponseEntity.ok(TokenDTO
+              .builder()
+              .id(usuarioAutenticado.getId())
+              .nomeUsuario(usuarioAutenticado.getNome())
+              .token(jwtService.gerarToken(usuarioAutenticado))
+              .horaExpiracao(dataExpiracao.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+              .status(TokenDTO.Status.OK)
+              .build()
+      );
 
    }
 
