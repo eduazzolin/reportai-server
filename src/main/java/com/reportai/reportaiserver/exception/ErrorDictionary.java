@@ -15,7 +15,7 @@ public enum ErrorDictionary {
    ,CATEGORIA_NAO_ENCONTRADA("ERRO-011", "Categoria não encontrada.")
    ,DISTANCIA_INVALIDA("ERRO-012", "Distância do centro de Florianópolis ultrapassa o permitido.")
    ,FORMATO_INCORRETO("ERRO-013", "Formato de imagem incorreto. Utilize .jpeg ou .png.")
-   ,TAMANHO_MAXIMO("ERRO-014", "Tamanho máximo de imagem excedido. Limite de 5MB.")
+   ,TAMANHO_MAXIMO("ERRO-014", "Tamanho máximo de imagem excedido. Limite de 10MB.")
    ,USUARIO_SEM_PERMISSAO("ERRO-015", "Usuário sem permissão para realizar a operação.")
    ,ERRO_OPENAI("ERRO-016", "Erro ao se comunicar com o serviço OpenAI.")
    ,INTERACAO_DUPLICADA("ERRO-017", "Interação já existe para o registro.")

@@ -80,6 +80,7 @@ public class ImagemController {
       }
 
       Imagem imagemSalva = service.salvar(file, idRegistro);
+
       return ResponseEntity.ok(imagemSalva);
 
    }

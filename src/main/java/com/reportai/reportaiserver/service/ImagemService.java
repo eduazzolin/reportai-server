@@ -11,12 +11,18 @@ import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.repository.ImagemRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
-import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,7 +58,6 @@ public class ImagemService {
    public Imagem salvar(MultipartFile file, Long idRegistro) throws IOException {
 
       validacoes.validarImagem(file);
-
 
       String url = uploadParaGCS(file, idRegistro);
       Imagem imagem = new Imagem();
@@ -107,42 +112,83 @@ public class ImagemService {
     * @throws IOException
     */
    public String uploadParaGCS(MultipartFile file, Long idRegistro) throws IOException {
-      String fileName = "";
-      System.out.println("\n\n\nIniciando upload da imagem para o GCS...");
-      System.out.println(googleApplicationCredentialsJson);
 
-      try {
-         InputStream credentialsStream = new ByteArrayInputStream(
-                 googleApplicationCredentialsJson.getBytes(StandardCharsets.UTF_8)
-         );
+      InputStream credentialsStream = new ByteArrayInputStream(
+              googleApplicationCredentialsJson.getBytes(StandardCharsets.UTF_8)
+      );
 
-         Storage storage = StorageOptions
-                 .newBuilder()
-                 .setCredentials(GoogleCredentials.fromStream(credentialsStream))
-                 .setProjectId("reportai-453222").build().getService();
+      Storage storage = StorageOptions
+              .newBuilder()
+              .setCredentials(GoogleCredentials.fromStream(credentialsStream))
+              .setProjectId("reportai-453222").build().getService();
 
-         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-         Thumbnails.of(file.getInputStream())
-                 .scale(1) // Mantém o tamanho original
-                 .outputQuality(0.5) // Reduz a qualidade para 50%
-                 .outputFormat("jpg")
-                 .toOutputStream(outputStream);
 
-         byte[] compressedImage = outputStream.toByteArray();
+      String fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID();
+      BlobId blobId = BlobId.of(bucketName, fileName);
+      BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+              .setContentType(file.getContentType())
+              .build();
 
-         fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID();
-         BlobId blobId = BlobId.of(bucketName, fileName);
-         BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
-                 .setContentType(file.getContentType())
-                 .build();
-
-         storage.create(blobInfo, compressedImage);
-      } catch (IOException e) {
-         System.out.println("\n\n\nErro ao fazer upload da imagem: " + e.getMessage());
-      }
+      byte[] fileBytes = comprimirImagemGenerica(file, 0.5f); // Compressão a 80% de qualidade
+      storage.create(blobInfo, fileBytes);
 
       return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
    }
+
+   public byte[] comprimirImagemGenerica(MultipartFile file, float qualidadeJPEG) throws IOException {
+      String contentType = file.getContentType();
+      BufferedImage imagem = ImageIO.read(file.getInputStream());
+
+      if (imagem == null) {
+         throw new IOException("Não foi possível ler a imagem.");
+      }
+
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+      if ("image/jpeg".equals(contentType) || "image/jpg".equals(contentType)) {
+         // Comprimir JPEG
+         ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+         ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+
+         if (jpgWriteParam.canWriteCompressed()) {
+            jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            jpgWriteParam.setCompressionQuality(qualidadeJPEG); // 0.0 (alta compressão) a 1.0 (sem compressão)
+         }
+
+         ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
+         jpgWriter.setOutput(ios);
+         jpgWriter.write(null, new IIOImage(imagem, null, null), jpgWriteParam);
+         ios.close();
+         jpgWriter.dispose();
+
+      } else if ("image/png".equals(contentType)) {
+         // PNG: converte para JPEG (opcional), pois PNG é lossless
+         BufferedImage converted = new BufferedImage(
+                 imagem.getWidth(), imagem.getHeight(), BufferedImage.TYPE_INT_RGB);
+         converted.getGraphics().drawImage(imagem, 0, 0, Color.WHITE, null); // remove transparência
+
+         ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+         ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+
+         if (jpgWriteParam.canWriteCompressed()) {
+            jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            jpgWriteParam.setCompressionQuality(qualidadeJPEG);
+         }
+
+         ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
+         jpgWriter.setOutput(ios);
+         jpgWriter.write(null, new IIOImage(converted, null, null), jpgWriteParam);
+         ios.close();
+         jpgWriter.dispose();
+
+      } else {
+         // Outros formatos: retorna bytes originais sem compressão
+         return file.getBytes();
+      }
+
+      return outputStream.toByteArray();
+   }
+
 
    /**
     * Remove uma imagem do Google Cloud Storage.

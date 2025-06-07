@@ -166,7 +166,7 @@ public class Validacoes {
 
 
       // tamanho
-      if (file.getSize() > 1024 * 1024 * 5) {
+      if (file.getSize() > 1024 * 1024 * 10) {
          throw new CustomException(ErrorDictionary.TAMANHO_MAXIMO);
       }
 
