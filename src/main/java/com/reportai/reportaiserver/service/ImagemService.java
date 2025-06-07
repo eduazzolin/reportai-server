@@ -11,14 +11,12 @@ import com.reportai.reportaiserver.model.Imagem;
 import com.reportai.reportaiserver.model.Registro;
 import com.reportai.reportaiserver.repository.ImagemRepository;
 import com.reportai.reportaiserver.utils.Validacoes;
-import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -123,22 +121,13 @@ public class ImagemService {
               .setContentType(file.getContentType())
               .build();
 
-      byte[] fileBytes = comprimirImagem(file); // Compressão a 80% de qualidade
+      byte[] fileBytes = file.getBytes();
       storage.create(blobInfo, fileBytes);
 
       return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
    }
 
-   public byte[] comprimirImagem(MultipartFile file) throws IOException {
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      Thumbnails.of(file.getInputStream())
-              .scale(1) // Mantém o tamanho original
-              .outputQuality(0.5) // Reduz a qualidade para 50%
-              .outputFormat("jpg")
-              .toOutputStream(outputStream);
 
-      return outputStream.toByteArray();
-   }
 
 
    /**
