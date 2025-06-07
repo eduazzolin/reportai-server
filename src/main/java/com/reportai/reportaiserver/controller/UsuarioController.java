@@ -246,12 +246,12 @@ public class UsuarioController {
     * @return UsuariosAdminPaginadoDTO
     */
    @GetMapping("/admin")
-   public ResponseEntity<?> buscarPorTermo(@RequestParam int pagina, @RequestParam int limite, @RequestParam String termo, @RequestParam String ordenacao, @RequestHeader("Authorization") String authorizationHeader) {
+   public ResponseEntity<?> buscarPorTermo(@RequestParam int pagina, @RequestParam int limite, @RequestParam String termo, @RequestParam String id_usuario, @RequestParam String ordenacao, @RequestHeader("Authorization") String authorizationHeader) {
 
       Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
       jwtService.verificarSeUsuarioADMIN(usuarioRequisitante);
 
-      UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, ordenacao);
+      UsuariosAdminPaginadoDTO usuariosAdminPaginadoDTO = service.buscarUsuariosAdminPaginadoDTOPorTermos(pagina, limite, termo, id_usuario, ordenacao);
       return ResponseEntity.ok(usuariosAdminPaginadoDTO);
    }
 

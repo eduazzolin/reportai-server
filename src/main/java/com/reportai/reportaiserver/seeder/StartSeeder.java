@@ -340,6 +340,7 @@ public class StartSeeder implements CommandLineRunner {
                */
               CREATE PROCEDURE SP_ADMIN_LISTAR_USUARIOS(
                        IN p_termo VARCHAR(1000),
+                       IN p_id_usuario VARCHAR(1000),
                        IN p_offset INT,
                        IN p_limite INT,
                        IN p_ordenacao VARCHAR(255)
@@ -361,9 +362,9 @@ public class StartSeeder implements CommandLineRunner {
                              AND (
                                LOWER(u.nome) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
                                LOWER(u.cpf) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
-                               LOWER(u.email) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
-                               u.ID LIKE CONCAT("%","', p_termo, '", "%")
+                               LOWER(u.email) LIKE LOWER(CONCAT("%","', p_termo, '", "%"))
                              )
+                             AND (u.id = ''', p_id_usuario, ''' OR ''', p_id_usuario, ''' = '''')
                            GROUP BY u.id, u.cpf, u.dt_criacao, u.dt_modificacao, u.email, u.is_deleted, u.nome, u.role
                            ORDER BY ', p_ordenacao, '
                            LIMIT ', p_limite, ' OFFSET ', p_offset);
@@ -375,7 +376,8 @@ public class StartSeeder implements CommandLineRunner {
               """);
       jdbcTemplate.execute("""
               CREATE PROCEDURE SP_ADMIN_LISTAR_USUARIOS_COUNT(
-                  IN p_termo VARCHAR(1000)
+                  IN p_termo VARCHAR(1000),
+                  IN p_id_usuario VARCHAR(1000)
               )
               BEGIN
                   SELECT COUNT(*)
@@ -384,9 +386,9 @@ public class StartSeeder implements CommandLineRunner {
                     AND (
                       LOWER(nome) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
                       LOWER(cpf) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
-                      LOWER(email) LIKE LOWER(CONCAT('%', p_termo, '%')) OR
-                      ID LIKE CONCAT('%', p_termo, '%')
-                      );
+                      LOWER(email) LIKE LOWER(CONCAT('%', p_termo, '%'))
+                      )
+                      AND (id = p_id_usuario OR p_id_usuario = '');
               END;
               """);
    }

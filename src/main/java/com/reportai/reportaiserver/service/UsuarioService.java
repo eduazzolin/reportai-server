@@ -112,14 +112,14 @@ public class UsuarioService {
       return usuario.get();
    }
 
-   public UsuariosAdminPaginadoDTO buscarUsuariosAdminPaginadoDTOPorTermos(int pagina, int limite, String termo, String ordenacao) {
+   public UsuariosAdminPaginadoDTO buscarUsuariosAdminPaginadoDTOPorTermos(int pagina, int limite, String termo, String id_usuario, String ordenacao) {
 
       int offset = pagina * limite;
-      int totalUsuarios = repository.countAtivosByTermo(termo);
+      int totalUsuarios = repository.countAtivosByTermo(termo, id_usuario);
       int totalPaginas = (int) Math.ceil((double) totalUsuarios / limite);
 
 
-      List<UsuarioListagemAdminProjection> usuariosDTO = repository.searchAtivosByTermo(termo, offset, limite, ordenacao);
+      List<UsuarioListagemAdminProjection> usuariosDTO = repository.searchAtivosByTermo(termo, id_usuario, offset, limite, ordenacao);
 
       return UsuariosAdminPaginadoDTO.builder()
               .pagina(pagina)
