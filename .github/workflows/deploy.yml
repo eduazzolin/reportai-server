@@ -63,4 +63,5 @@ jobs:
           SMTP_PASSWORD: your_smtp_password
           OPENAI_API_KEY: your_openai_api_key
           WEB_URL: http://localhost:3000
+          GOOGLE_APPLICATION_CREDENTIALS: placeholder
         run: mvn clean test
