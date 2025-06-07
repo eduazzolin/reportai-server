@@ -37,7 +37,7 @@ public class ImagemService {
    @Value("${gcs.bucket-name}")
    private String bucketName;
 
-   @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
+   @Value("${GOOGLE_CREDENTIALS}")
    private String googleApplicationCredentialsJson;
 
 
