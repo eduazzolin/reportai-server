@@ -18,6 +18,7 @@ public class UsuarioDTO {
    private String nome;
    private String email;
    private String cpf;
+   private Boolean segundoFator;
    private LocalDateTime dtCriacao;
    private LocalDateTime dtModificacao;
    private Usuario.Roles role;

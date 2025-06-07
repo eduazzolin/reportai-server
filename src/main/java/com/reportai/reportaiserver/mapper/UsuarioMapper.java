@@ -16,18 +16,8 @@ public class UsuarioMapper {
       dto.setRole(entity.getRole());
       dto.setDtCriacao(entity.getDtCriacao());
       dto.setDtModificacao(entity.getDtModificacao());
+      dto.setSegundoFator(entity.getSegundoFator());
       return dto;
-
-   }
-
-   public static Usuario toEntity(UsuarioDTO dto) {
-
-      Usuario entity = new Usuario();
-      entity.setId(dto.getId());
-      entity.setNome(dto.getNome());
-      entity.setEmail(dto.getEmail());
-      entity.setCpf(dto.getCpf());
-      return entity;
 
    }
 
