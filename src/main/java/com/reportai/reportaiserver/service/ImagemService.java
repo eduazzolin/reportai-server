@@ -107,32 +107,40 @@ public class ImagemService {
     * @throws IOException
     */
    public String uploadParaGCS(MultipartFile file, Long idRegistro) throws IOException {
+      String fileName = "";
+      System.out.println("\n\n\nIniciando upload da imagem para o GCS...");
+      System.out.println(googleApplicationCredentialsJson);
 
-      InputStream credentialsStream = new ByteArrayInputStream(
-              googleApplicationCredentialsJson.getBytes(StandardCharsets.UTF_8)
-      );
+      try {
+         InputStream credentialsStream = new ByteArrayInputStream(
+                 googleApplicationCredentialsJson.getBytes(StandardCharsets.UTF_8)
+         );
 
-      Storage storage = StorageOptions
-              .newBuilder()
-              .setCredentials(GoogleCredentials.fromStream(credentialsStream))
-              .setProjectId("reportai-453222").build().getService();
+         Storage storage = StorageOptions
+                 .newBuilder()
+                 .setCredentials(GoogleCredentials.fromStream(credentialsStream))
+                 .setProjectId("reportai-453222").build().getService();
 
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      Thumbnails.of(file.getInputStream())
-              .scale(1) // Mantém o tamanho original
-              .outputQuality(0.5) // Reduz a qualidade para 50%
-              .outputFormat("jpg")
-              .toOutputStream(outputStream);
+         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+         Thumbnails.of(file.getInputStream())
+                 .scale(1) // Mantém o tamanho original
+                 .outputQuality(0.5) // Reduz a qualidade para 50%
+                 .outputFormat("jpg")
+                 .toOutputStream(outputStream);
 
-      byte[] compressedImage = outputStream.toByteArray();
+         byte[] compressedImage = outputStream.toByteArray();
 
-      String fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID();
-      BlobId blobId = BlobId.of(bucketName, fileName);
-      BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
-              .setContentType(file.getContentType())
-              .build();
+         fileName = "registros/id_registro=" + idRegistro + "/" + UUID.randomUUID();
+         BlobId blobId = BlobId.of(bucketName, fileName);
+         BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+                 .setContentType(file.getContentType())
+                 .build();
 
-      storage.create(blobInfo, compressedImage);
+         storage.create(blobInfo, compressedImage);
+      } catch (IOException e) {
+         System.out.println("\n\n\nErro ao fazer upload da imagem: " + e.getMessage());
+      }
+
       return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
    }
 
