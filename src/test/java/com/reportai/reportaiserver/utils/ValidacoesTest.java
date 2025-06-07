@@ -152,7 +152,7 @@ class ValidacoesTest {
    void deveLancarErroParaTamanhoDeImagemExcedido() {
       MultipartFile arquivo = mock(MultipartFile.class);
       when(arquivo.getContentType()).thenReturn("image/jpeg");
-      when(arquivo.getSize()).thenReturn(6L * 1024 * 1024); // 6MB
+      when(arquivo.getSize()).thenReturn(11L * 1024 * 1024); // 11MB
 
       assertThrows(CustomException.class, () -> validacoes.validarImagem(arquivo));
    }
