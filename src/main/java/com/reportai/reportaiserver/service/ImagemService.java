@@ -14,14 +14,14 @@ import com.reportai.reportaiserver.utils.Validacoes;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,8 +37,9 @@ public class ImagemService {
    @Value("${gcs.bucket-name}")
    private String bucketName;
 
-   @Value("classpath:gcloud-credentials.json")
-   private Resource googleApplicationCredentials;
+   @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
+   private String googleApplicationCredentialsJson;
+
 
    /**
     * Salva uma imagem no Google Cloud Storage e no banco de dados.
@@ -107,9 +108,13 @@ public class ImagemService {
     */
    public String uploadParaGCS(MultipartFile file, Long idRegistro) throws IOException {
 
+      InputStream credentialsStream = new ByteArrayInputStream(
+              googleApplicationCredentialsJson.getBytes(StandardCharsets.UTF_8)
+      );
+
       Storage storage = StorageOptions
               .newBuilder()
-              .setCredentials(GoogleCredentials.fromStream(googleApplicationCredentials.getInputStream()))
+              .setCredentials(GoogleCredentials.fromStream(credentialsStream))
               .setProjectId("reportai-453222").build().getService();
 
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -139,9 +144,14 @@ public class ImagemService {
     */
    public void removerDoGCS(String url) throws IOException {
       String fileName = url.substring(url.indexOf("registros/"));
+
+      InputStream credentialsStream = new ByteArrayInputStream(
+              googleApplicationCredentialsJson.getBytes(StandardCharsets.UTF_8)
+      );
+
       Storage storage = StorageOptions
               .newBuilder()
-              .setCredentials(GoogleCredentials.fromStream(googleApplicationCredentials.getInputStream()))
+              .setCredentials(GoogleCredentials.fromStream(credentialsStream))
               .setProjectId("reportai-453222").build().getService();
       BlobId blobId = BlobId.of(bucketName, fileName);
       storage.delete(blobId);
