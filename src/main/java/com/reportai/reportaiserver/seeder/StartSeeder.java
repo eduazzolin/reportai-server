@@ -357,7 +357,7 @@ public class StartSeeder implements CommandLineRunner {
                                   COUNT(r.ID) AS totalRegistros
                            FROM usuario u
                            LEFT JOIN registro r ON r.usuario_id = u.ID
-                           WHERE NOT u.is_deleted
+                           WHERE NOT u.is_deleted and NOT r.is_deleted
                              AND (
                                LOWER(u.nome) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
                                LOWER(u.cpf) LIKE LOWER(CONCAT("%","', p_termo, '", "%")) OR
