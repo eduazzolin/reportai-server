@@ -106,7 +106,6 @@ class RegistroControllerTest {
    @Test
    void testDeveConcluirRegistroSeUsuarioProprietarioOuAdmin() throws Exception {
       Registro registro = registroService.salvar(registroValido);
-      System.out.print("\n\n\n\n\n" + registro.getId() + "\n\n\n\n\n");
       mockMvc.perform(put("/registros/" + registro.getId() + "/concluir")
                       .header("Authorization", "Bearer " + tokenValido))
               .andExpect(status().isOk());

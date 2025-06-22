@@ -65,17 +65,6 @@ class ValidacoesTest {
    }
 
    @Test
-   void deveLancarErroParaEmailInvalido() {
-      Usuario usuario = new Usuario();
-      usuario.setNome("Nome");
-      usuario.setEmail("email-invalido");
-      usuario.setCpf("52998224725");
-      usuario.setSenha("123456");
-
-      assertThrows(CustomException.class, () -> validacoes.validarUsuario(usuario));
-   }
-
-   @Test
    void deveLancarErroParaEmailDuplicado() {
       Usuario usuario = new Usuario();
       usuario.setNome("Nome");
@@ -87,6 +76,29 @@ class ValidacoesTest {
 
       assertThrows(CustomException.class, () -> validacoes.validarUsuario(usuario));
    }
+
+   @Test
+   void deveLancarErroParaEmailInvalido() {
+      Usuario usuario = new Usuario();
+      usuario.setNome("Nome");
+      usuario.setEmail("email-invalido");
+      usuario.setCpf("52998224725");
+      usuario.setSenha("123456");
+
+      assertThrows(CustomException.class, () -> validacoes.validarUsuario(usuario));
+   }
+
+   @Test
+   void deveAceitarEmailValido() {
+      Usuario usuario = new Usuario();
+      usuario.setNome("Nome");
+      usuario.setEmail("usuario@conta.com");
+      usuario.setCpf("52998224725");
+      usuario.setSenha("123456");
+
+      assertDoesNotThrow(() -> validacoes.validarUsuario(usuario));
+   }
+
 
    @Test
    void deveLancarErroDistanciaCentro() {

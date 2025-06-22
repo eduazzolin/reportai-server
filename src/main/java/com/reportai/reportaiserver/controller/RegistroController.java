@@ -41,12 +41,16 @@ public class RegistroController {
     * @return DTO do registro salvo
     */
    @PostMapping
-   public ResponseEntity<?> salvar(@RequestBody Registro registro, @RequestHeader("Authorization") String authorizationHeader) {
+   public ResponseEntity<?> salvar(
+           @RequestBody Registro registro,
+           @RequestHeader("Authorization") String authorizationHeader
+   ) {
+
       Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
 
       /*
        * se não for admin, coloca o usuario requisitante como dono do registro.
-       * se for admin, mas for um registro novo, coloca o usuario requisitante como dono do registro.
+       * se for admin, mas for um registro novo, coloca o usuario requisitante como dono.
        */
       if (usuarioRequisitante.getRole() != Usuario.Roles.ADMIN) {
          registro.setUsuario(usuarioRequisitante);
@@ -99,15 +103,15 @@ public class RegistroController {
     * Para mais informações, consulte a procedure SP_REGISTROS_POR_DISTANCIA.
     * Este endpoint é ABERTO.
     *
-    * @param latitude
-    * @param longitude
-    * @param distancia
-    * @param filtro
-    * @param ordenacao
     * @return lista de registros encontrados em formato DTO
     */
    @GetMapping("/distancia")
-   public ResponseEntity<?> buscarPorDistancia(@RequestParam double latitude, @RequestParam double longitude, @RequestParam double distancia, @RequestParam String filtro, @RequestParam String ordenacao) {
+   public ResponseEntity<?> buscarPorDistancia(
+           @RequestParam double latitude,
+           @RequestParam double longitude,
+           @RequestParam double distancia,
+           @RequestParam String filtro,
+           @RequestParam String ordenacao) {
       int limite = 100;
 
       List<Registro> registros = service.buscarPorDistancia(latitude, longitude, distancia, limite, filtro, ordenacao);

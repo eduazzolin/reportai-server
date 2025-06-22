@@ -50,7 +50,7 @@ public class UsuarioController {
       Usuario usuarioSalvo = null;
 
       if (usuario.getId() != null) {
-         /* se o usuário já existe, só pode editar o nome ou email */
+         /* se o usuário já existe, só pode editar o nome, email ou segundo fator */
          Usuario usuarioRequisitante = jwtService.obterUsuarioRequisitante(authorizationHeader);
 
          if (!usuarioRequisitante.getId().equals(usuario.getId()) && !usuarioRequisitante.getRole().equals(Usuario.Roles.ADMIN)) {
@@ -129,7 +129,6 @@ public class UsuarioController {
       /* lança exceção se o usuário não existe */
       usuario = service.buscarPorEmail(usuario.getEmail());
 
-      /* gerando o código */
       String codigo = CodigoRecuperacaoSenhaService.gerarCodigo();
       codigoRecuperacaoSenhaService.salvar(usuario, codigo);
       boolean resultadoEmail = emailService.enviarEmailRecuperacaoSenha(usuario.getEmail(), codigo);

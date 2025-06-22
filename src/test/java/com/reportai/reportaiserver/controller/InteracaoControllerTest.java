@@ -148,7 +148,6 @@ class InteracaoControllerTest {
       interacaoService.salvar(interacaoValida);
       Thread.sleep(1000);
       LocalDateTime dtConclusaoProgramada = registroService.buscarDtConclusaoProgramadaPorId(8L);
-      System.out.println("\n\n\n\n\n\ndtConclusaoProgramada: " + dtConclusaoProgramada);
       assert dtConclusaoProgramada != null;
    }
 
@@ -159,7 +158,6 @@ class InteracaoControllerTest {
       interacaoService.salvar(interacaoValida);
       Thread.sleep(1000);
       LocalDateTime dtConclusaoProgramada = registroService.buscarDtConclusaoProgramadaPorId(8L);
-      System.out.println("\n\n\n\n\n\ndtConclusaoProgramada: " + dtConclusaoProgramada);
       assert dtConclusaoProgramada == null;
    }
 
