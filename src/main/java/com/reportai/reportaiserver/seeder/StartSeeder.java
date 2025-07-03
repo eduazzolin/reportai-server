@@ -607,15 +607,17 @@ public class StartSeeder implements CommandLineRunner {
                  .usuario(usuarioRepository.findById(2L).get())
                  .build());
 
+
+
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-05-30 14:27:52' WHERE id = 1;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-02-01 08:15:33' WHERE id = 2;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-03-01 19:42:07' WHERE id = 3;");
-         jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-03-20 11:05:46' WHERE id = 4;");
+         jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-06-20 11:05:46' WHERE id = 4;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2024-09-20 06:50:18' WHERE id = 5;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-05-20 22:11:59' WHERE id = 6;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-05-21 00:34:25' WHERE id = 7;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-05-21 17:58:04' WHERE id = 8;");
-         jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-05-05 09:23:10' WHERE id = 9;");
+         jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-07-05 09:23:10' WHERE id = 9;");
          jdbcTemplate.execute("UPDATE registro SET dt_criacao = '2025-04-20 13:44:39' WHERE id = 10;");
       }
    }
